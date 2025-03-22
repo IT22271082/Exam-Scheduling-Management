@@ -24,7 +24,7 @@ class LecturerController extends Controller
             'department' => 'required|string|max:255|in:Computer Science,Mathematics,Physics,Chemistry,Biology',
             'qualification' => 'required|string|max:255',
             'bio' => 'nullable|string',
-            //'profile_photo' => 'nullable|image|max:2048',//
+            'profile_photo' => 'nullable|image|max:2048',
         ]);
 
         if ($validator->fails()) {

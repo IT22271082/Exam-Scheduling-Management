@@ -6,6 +6,7 @@ const LecturerList = () => {
   const [lecturers, setLecturers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [departmentCounts, setDepartmentCounts] = useState({});
 
   useEffect(() => {
     fetchLecturers();
@@ -16,6 +17,7 @@ const LecturerList = () => {
       setLoading(true);
       const response = await getLecturers();
       setLecturers(response.data);
+      calculateDepartmentCounts(response.data);
       setLoading(false);
     } catch (err) {
       setError('Failed to load lecturers');
@@ -24,11 +26,21 @@ const LecturerList = () => {
     }
   };
 
+  const calculateDepartmentCounts = (lecturers) => {
+    const counts = lecturers.reduce((acc, lecturer) => {
+      acc[lecturer.department] = (acc[lecturer.department] || 0) + 1;
+      return acc;
+    }, {});
+    setDepartmentCounts(counts);
+  };
+
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this lecturer?')) {
       try {
         await deleteLecturer(id);
-        setLecturers(lecturers.filter(lecturer => lecturer.id !== id));
+        const updatedLecturers = lecturers.filter(lecturer => lecturer.id !== id);
+        setLecturers(updatedLecturers);
+        calculateDepartmentCounts(updatedLecturers);
       } catch (err) {
         setError('Failed to delete lecturer');
         console.error(err);
@@ -41,26 +53,70 @@ const LecturerList = () => {
 
   return (
     <div className="container mt-4">
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h2>Lecturers</h2>
-        <Link to="/lecturers/create" className="btn btn-primary">
-          Add New Lecturer
-        </Link>
+      {/* Top Header Bar */}
+      <div 
+        className="p-3 text-white d-flex justify-content-between align-items-center"
+        style={{ backgroundColor: '#003366', borderRadius: '8px' }}
+      >
+        <h2 className="m-0">Lecturers</h2>
+        <div>
+          <Link to="/lecturers/create" className="btn btn-success me-2">
+            + Add New Lecturer
+          </Link>
+          <Link to="/lecturers/summary" className="btn btn-info">
+            📊 Generate Summary Report
+          </Link>
+        </div>
       </div>
 
+      {/* Total Lecturers and Department Count Cards */}
+      <div className="row mt-3">
+        {/* Total Lecturers Card */}
+        <div className="col-md-4">
+          <div 
+            className="card text-center p-3 shadow-sm"
+            style={{ backgroundColor: '#004080', color: 'white', borderRadius: '8px' }}
+          >
+            <h4>Total Lecturers</h4>
+            <h2>{lecturers.length}</h2>
+          </div>
+        </div>
+
+        {/* Lecturers by Department */}
+        <div className="col-md-8">
+          <div className="card p-3 shadow-sm" style={{ borderRadius: '8px' }}>
+            <h5>Lecturers by Department</h5>
+            <ul className="list-group list-group-flush">
+              {Object.entries(departmentCounts).map(([department, count]) => (
+                <li 
+                  key={department} 
+                  className="list-group-item d-flex justify-content-between align-items-center"
+                >
+                  {department} 
+                  <span className="badge rounded-pill" style={{ backgroundColor: '#007BFF', color: 'white' }}>
+                    {count}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      {/* Lecturer Table */}
       {lecturers.length === 0 ? (
-        <div className="alert alert-info">No lecturers found</div>
+        <div className="alert alert-info text-center mt-3">No lecturers found</div>
       ) : (
-        <div className="table-responsive">
-          <table className="table table-striped">
-            <thead>
+        <div className="table-responsive mt-3">
+          <table className="table table-hover">
+            <thead style={{ backgroundColor: '#003366', color: 'white' }}>
               <tr>
-              <th>ID</th>
+                <th>ID</th>
                 <th>Name</th>
                 <th>Email</th>
                 <th>Department</th>
                 <th>Qualification</th>
-                <th>Actions</th>
+                <th className="text-center">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -71,7 +127,7 @@ const LecturerList = () => {
                   <td>{lecturer.email}</td>
                   <td>{lecturer.department}</td>
                   <td>{lecturer.qualification}</td>
-                  <td>
+                  <td className="text-center">
                     <Link to={`/lecturers/${lecturer.id}`} className="btn btn-info btn-sm me-2">
                       View
                     </Link>

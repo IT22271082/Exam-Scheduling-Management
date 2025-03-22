@@ -4,6 +4,8 @@ import Dashboard from "./pages/Dashboard";
 import LecturerList from "./components/LecturerList";
 import LecturerForm from "./components/LecturerForm";
 import LecturerDetail from "./components/LecturerDetail";
+import 'bootstrap/dist/css/bootstrap.min.css';
+
 
 function App() {
     return (

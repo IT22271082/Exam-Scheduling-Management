@@ -10,6 +10,8 @@ const api = axios.create({
   }
 });
 
+
+
 export const getLecturers = () => api.get('/lecturers');
 export const getLecturer = (id) => api.get(`/lecturers/${id}`);
 export const createLecturer = (data) => {
