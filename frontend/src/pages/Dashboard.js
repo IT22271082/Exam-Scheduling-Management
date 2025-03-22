@@ -22,7 +22,7 @@ function Dashboard() {
                         </Link>
                     </li>
                     <li className="nav-item mb-2">
-                   <Link to="/student-management" className="nav-link text-white">
+                   <Link to="/student" className="nav-link text-white">
                       👨‍🎓 Student Management
                         </Link>
                       </li>
