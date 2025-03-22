@@ -6,11 +6,11 @@ const ResourceAllocationList = () => {
     const [resources, setResources] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
-    const [searchQuery, setSearchQuery] = useState(''); // State for search query
+    const [searchQuery, setSearchQuery] = useState('');
     const navigate = useNavigate();
 
     // API base URL
-    const API_BASE_URL = 'http://localhost:8000/api/resource-allocations'; // Verify this URL
+    const API_BASE_URL = 'http://localhost:8000/api/resource-allocations';
 
     // Fetch resource allocations from the backend
     useEffect(() => {
@@ -44,17 +44,58 @@ const ResourceAllocationList = () => {
         }
     };
 
+    // Handle search input change
+    const handleSearchChange = (e) => {
+        setSearchQuery(e.target.value);
+    };
+
     // Filter resources based on search query
     const filteredResources = resources.filter((resource) => {
-        const query = searchQuery.toLowerCase();
+        if (!searchQuery.trim()) return true;
+
+        const query = searchQuery.trim().toLowerCase();
         return (
-            resource.resource_name.toLowerCase().includes(query) ||
-            resource.resource_type.toLowerCase().includes(query) ||
-            resource.exam_id.toLowerCase().includes(query) || // Filter by exam ID
-            resource.status.toLowerCase().includes(query) ||
-            new Date(resource.allocation_date).toLocaleString().toLowerCase().includes(query)
+            (resource.resource_name && resource.resource_name.toString().toLowerCase().includes(query)) ||
+            (resource.resource_type && resource.resource_type.toString().toLowerCase().includes(query)) ||
+            (resource.exam_id && String(resource.exam_id).toLowerCase().includes(query)) ||
+            (resource.status && resource.status.toString().toLowerCase().includes(query)) ||
+            (resource.allocation_date && new Date(resource.allocation_date).toLocaleString().toLowerCase().includes(query))
         );
     });
+
+    // Generate CSV report
+    const generateCSVReport = () => {
+        // Define CSV headers
+        const headers = [
+            'Resource Name',
+            'Resource Type',
+            'Exam ID',
+            'Allocation Date',
+            'Status',
+        ];
+
+        // Map resources to CSV rows
+        const rows = filteredResources.map((resource) => [
+            resource.resource_name,
+            resource.resource_type,
+            resource.exam_id,
+            new Date(resource.allocation_date).toLocaleString(),
+            resource.status,
+        ]);
+
+        // Combine headers and rows
+        const csvContent = [
+            headers.join(','), // Header row
+            ...rows.map((row) => row.join(',')) // Data rows
+        ].join('\n');
+
+        // Create a Blob and trigger download
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'resource_allocations_report.csv';
+        link.click();
+    };
 
     // Styles
     const styles = {
@@ -153,8 +194,32 @@ const ResourceAllocationList = () => {
             transition: 'background-color 0.3s ease, transform 0.3s ease',
             marginLeft: '100px',
         },
+        reportButton: {
+            backgroundColor: '#6c757d',
+            color: 'white',
+            padding: '8px 16px',
+            border: 'none',
+            borderRadius: '6px',
+            cursor: 'pointer',
+            fontSize: '0.9rem',
+            width: 'auto',
+            transition: 'background-color 0.3s ease, transform 0.3s ease',
+            marginLeft: '10px',
+        },
         buttonHover: {
             transform: 'translateY(-2px)'
+        },
+        searchSection: {
+            display: 'flex',
+            alignItems: 'center',
+            marginBottom: '20px',
+            position: 'relative'
+        },
+        searchIcon: {
+            position: 'absolute',
+            right: '10px',
+            color: '#888',
+            pointerEvents: 'none'
         }
     };
 
@@ -164,18 +229,32 @@ const ResourceAllocationList = () => {
             {error && <div style={styles.error}>{error}</div>}
 
             {/* Search Bar */}
-            <input
-                type="text"
-                placeholder="Search by name, type, exam ID, date, or status..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                style={styles.searchBar}
-            />
+            <div style={styles.searchSection}>
+                <input
+                    type="text"
+                    placeholder="Search by name, type, exam ID, date, or status..."
+                    value={searchQuery}
+                    onChange={handleSearchChange}
+                    style={styles.searchBar}
+                />
+                <span style={styles.searchIcon}>🔍</span>
+            </div>
+
+            {/* Display search results count when searching */}
+            {searchQuery.trim() && (
+                <div style={{ marginBottom: '10px', fontSize: '0.9rem', color: '#666' }}>
+                    Found {filteredResources.length} result{filteredResources.length !== 1 ? 's' : ''} for "{searchQuery}"
+                </div>
+            )}
 
             {loading ? (
                 <div style={styles.loading}>Loading resources...</div>
             ) : filteredResources.length === 0 ? (
-                <div style={styles.noResources}>No resources found. Add a new resource to get started.</div>
+                <div style={styles.noResources}>
+                    {searchQuery.trim() 
+                        ? `No resources found matching "${searchQuery}". Try a different search term.` 
+                        : 'No resources found. Add a new resource to get started.'}
+                </div>
             ) : (
                 <table style={styles.table}>
                     <thead>
@@ -226,14 +305,26 @@ const ResourceAllocationList = () => {
                     </tbody>
                 </table>
             )}
-            <button
-                onClick={() => navigate('/resource/form')}
-                style={styles.addButton}
-                onMouseOver={(e) => e.target.style.transform = styles.buttonHover.transform}
-                onMouseOut={(e) => e.target.style.transform = 'none'}
-            >
-                Add New Resource
-            </button>
+
+            {/* Buttons for Add and Generate Report */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px' }}>
+                <button
+                    onClick={() => navigate('/resource/form')}
+                    style={styles.addButton}
+                    onMouseOver={(e) => e.target.style.transform = styles.buttonHover.transform}
+                    onMouseOut={(e) => e.target.style.transform = 'none'}
+                >
+                    Add New Resource
+                </button>
+                <button
+                    onClick={generateCSVReport}
+                    style={styles.reportButton}
+                    onMouseOver={(e) => e.target.style.transform = styles.buttonHover.transform}
+                    onMouseOut={(e) => e.target.style.transform = 'none'}
+                >
+                    Generate Report (CSV)
+                </button>
+            </div>
         </div>
     );
 };

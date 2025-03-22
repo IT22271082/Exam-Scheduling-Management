@@ -1,14 +1,16 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+// Import the background image
+import backgroundImage from '../assets/Aula Universidad.jpg';
 
 const Home = () => {
     const styles = {
         // Navigation Bar Styles
 
         image: {
-            maxWidth: '100%',
+            maxWidth: '30%', // Makes the image responsive but not too large
             height: 'auto',
-            marginBottom: '40px',
+            marginBottom: '10px',
             borderRadius: '10px',
             boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
         },
@@ -51,10 +53,11 @@ const Home = () => {
         },
         heading: {
             color: '#2c3e50',
-            fontSize: '2.5rem',
+            fontSize: '2.0rem',
             marginBottom: '20px',
             fontWeight: '600',
-            fontFamily: '"Arial", sans-serif'
+            fontFamily: '"Arial", sans-serif',
+            marginTop: '-40px',
         },
         paragraph: {
             color: '#666',
@@ -103,10 +106,15 @@ const Home = () => {
             {/* Main Content */}
             <div className="home" style={styles.container}>
                 <h1 style={styles.heading}>Welcome to the Resource Allocation System</h1>
-                <p style={styles.paragraph}>
-                    Manage your resources efficiently with our easy-to-use system. 
-                    Whether you're listing resources or adding new ones, we've got you covered!
-                </p>
+                
+                {/* Add the image here */}
+                <img 
+                    src={backgroundImage} 
+                    alt="University Classroom" 
+                    style={styles.image} 
+                />
+                
+               
                 <div style={styles.buttonContainer}>
                     <Link to="/resource/list" style={{ textDecoration: 'none' }}>
                         <button 
