@@ -33,7 +33,7 @@ const LecturerDetail = () => {
         <div className="card-header d-flex justify-content-between align-items-center">
           <h2>Lecturer Details</h2>
           <div>
-          <Link to="/lecture-management" className="btn btn-secondary me-2">
+            <Link to="/lecture-management" className="btn btn-secondary me-2">
               Back to List
             </Link>
             <Link to={`/lecturers/${id}/edit`} className="btn btn-warning">
@@ -42,46 +42,36 @@ const LecturerDetail = () => {
           </div>
         </div>
         <div className="card-body">
-          <div className="row">
-            <div className="col-md-4 text-center mb-4">
-              {lecturer.profile_photo ? (
-                <img 
-                  src={`http://localhost:8000/storage/${lecturer.profile_photo}`}
-                  alt={lecturer.name}
-                  className="img-fluid rounded-circle"
-                  style={{ maxHeight: '250px' }}
-                />
-              ) : (
-                <div className="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center" style={{ width: '200px', height: '200px', margin: '0 auto' }}>
-                  <span className="display-4">{lecturer.name.charAt(0)}</span>
-                </div>
-              )}
+          <h3>{lecturer.name}</h3>
+          <p className="text-muted">{lecturer.qualification}</p>
+          
+          <div className="mb-3">
+            <strong>Department:</strong> {lecturer.department}
+          </div>
+          
+          <div className="mb-3">
+            <strong>Email:</strong> {lecturer.email}
+          </div>
+          
+          {lecturer.phone && (
+            <div className="mb-3">
+              <strong>Phone:</strong> {lecturer.phone}
             </div>
-            <div className="col-md-8">
-              <h3>{lecturer.name}</h3>
-              <p className="text-muted">{lecturer.qualification}</p>
-              
-              <div className="mb-3">
-                <strong>Department:</strong> {lecturer.department}
-              </div>
-              
-              <div className="mb-3">
-                <strong>Email:</strong> {lecturer.email}
-              </div>
-              
-              {lecturer.phone && (
-                <div className="mb-3">
-                  <strong>Phone:</strong> {lecturer.phone}
-                </div>
-              )}
-              
-              {lecturer.bio && (
-                <div className="mb-3">
-                  <strong>Bio:</strong>
-                  <p className="mt-2">{lecturer.bio}</p>
-                </div>
-              )}
+          )}
+          
+          {lecturer.bio && (
+            <div className="mb-3">
+              <strong>Bio:</strong>
+              <p className="mt-2">{lecturer.bio}</p>
             </div>
+          )}
+
+          <div className="mb-3">
+            <strong>Lecturer Type:</strong> {lecturer.type}
+          </div>
+
+          <div className="mb-3">
+            <strong>Lecturer ID:</strong> {lecturer.lecturer_id}
           </div>
         </div>
       </div>

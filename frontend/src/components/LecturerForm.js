@@ -14,10 +14,10 @@ const LecturerForm = () => {
     department: '',
     qualification: '',
     bio: '',
-    profile_photo: null
+    type: '', // Senior or Junior
+    lecturer_id: '' // Auto-generated ID
   });
-  
-  const [photoPreview, setPhotoPreview] = useState(null);
+
   const [loading, setLoading] = useState(isEditMode);
   const [error, setError] = useState(null);
   const [errors, setErrors] = useState({});
@@ -40,11 +40,9 @@ const LecturerForm = () => {
         department: lecturer.department,
         qualification: lecturer.qualification,
         bio: lecturer.bio || '',
+        type: lecturer.type || '',
+        lecturer_id: lecturer.lecturer_id || '',
       });
-
-      if (lecturer.profile_photo) {
-        setPhotoPreview(`http://localhost:8000/storage/${lecturer.profile_photo}`);
-      }
       
       setLoading(false);
     } catch (err) {
@@ -58,12 +56,19 @@ const LecturerForm = () => {
     setFormData({ ...formData, [name]: value });
   };
 
-  const handlePhotoChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setFormData({ ...formData, profile_photo: file });
-      setPhotoPreview(URL.createObjectURL(file));
-    }
+  const generateLecturerID = (type) => {
+    const prefix = type === 'Senior' ? 'SNR' : 'JNR';
+    const randomNum = Math.floor(1000 + Math.random() * 9000); // Generate a random 4-digit number
+    return `${prefix}-${randomNum}`;
+  };
+
+  const handleTypeChange = (e) => {
+    const newType = e.target.value;
+    setFormData({
+      ...formData,
+      type: newType,
+      lecturer_id: generateLecturerID(newType), // Generate new ID
+    });
   };
 
   const handleSubmit = async (e) => {
@@ -141,31 +146,6 @@ const LecturerForm = () => {
               />
               {errors.phone && <div className="invalid-feedback">{errors.phone}</div>}
             </div>
-
-            {/* Profile Photo Section */}
-            <div className="mb-3">
-              <label htmlFor="profile_photo" className="form-label">Profile Photo</label>
-              <input
-                type="file"
-                className={`form-control ${errors.profile_photo ? 'is-invalid' : ''}`}
-                id="profile_photo"
-                name="profile_photo"
-                accept="image/*"
-                onChange={handlePhotoChange}
-              />
-              {errors.profile_photo && <div className="invalid-feedback">{errors.profile_photo}</div>}
-              
-              {photoPreview && (
-                <div className="mt-2">
-                  <img 
-                    src={photoPreview} 
-                    alt="Profile Preview" 
-                    className="img-thumbnail" 
-                    style={{ maxHeight: '200px' }} 
-                  />
-                </div>
-              )}
-            </div>
           </div>
         </div>
 
@@ -186,11 +166,12 @@ const LecturerForm = () => {
                 required
               >
                 <option value="">Select Department</option>
-                <option value="Computer Science">Computer Science</option>
-                <option value="Mathematics">Mathematics</option>
-                <option value="Physics">Physics</option>
-                <option value="Chemistry">Chemistry</option>
-                <option value="Biology">Biology</option>
+                <option value="Computer Science">Computer Science (CS)</option>
+                <option value="Mathematics">Software Engineering</option>
+                <option value="Physics">Information Technology (IT)</option>
+                <option value="Chemistry">Artificial Intelligence (AI)</option>
+                <option value="Biology">Cybersecurity</option>
+                <option value="Biology">Data Science</option>
               </select>
               {errors.department && <div className="invalid-feedback">{errors.department}</div>}
             </div>
@@ -207,6 +188,35 @@ const LecturerForm = () => {
                 required
               />
               {errors.qualification && <div className="invalid-feedback">{errors.qualification}</div>}
+            </div>
+            
+            <div className="mb-3">
+              <label htmlFor="type" className="form-label">Lecturer Type</label>
+              <select
+                className={`form-select ${errors.type ? 'is-invalid' : ''}`}
+                id="type"
+                name="type"
+                value={formData.type}
+                onChange={handleTypeChange}
+                required
+              >
+                <option value="">Select Type</option>
+                <option value="Senior">Senior</option>
+                <option value="Junior">Junior</option>
+              </select>
+              {errors.type && <div className="invalid-feedback">{errors.type}</div>}
+            </div>
+
+            <div className="mb-3">
+              <label htmlFor="lecturer_id" className="form-label">Lecturer ID</label>
+              <input
+                type="text"
+                className="form-control"
+                id="lecturer_id"
+                name="lecturer_id"
+                value={formData.lecturer_id}
+                readOnly
+              />
             </div>
             
             <div className="mb-3">
@@ -227,13 +237,7 @@ const LecturerForm = () => {
         {/* Form Actions */}
         <div className="mb-3">
           <button type="submit" className="btn btn-primary">Save</button>
-          <button 
-            type="button" 
-            className="btn btn-secondary ms-2"
-            onClick={() => navigate('/lecture-management')}
-          >
-            Cancel
-          </button>
+          <button type="button" className="btn btn-secondary ms-2" onClick={() => navigate('/lecture-management')}>Cancel</button>
         </div>
       </form>
     </div>
