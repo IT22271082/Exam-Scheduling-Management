@@ -9,18 +9,26 @@ const LecturerList = () => {
   const [departmentCounts, setDepartmentCounts] = useState({});
   const [showSummaryReport, setShowSummaryReport] = useState(false);
   const [qualificationStats, setQualificationStats] = useState([]);
+  const [totalLecturers, setTotalLecturers] = useState(0);
 
   useEffect(() => {
     fetchLecturers();
   }, []);
+
+  // Update stats whenever lecturers data changes
+  useEffect(() => {
+    if (lecturers.length > 0) {
+      calculateDepartmentCounts();
+      calculateQualificationStats();
+      setTotalLecturers(lecturers.length);
+    }
+  }, [lecturers]);
 
   const fetchLecturers = async () => {
     try {
       setLoading(true);
       const response = await getLecturers();
       setLecturers(response.data);
-      calculateDepartmentCounts(response.data);
-      calculateQualificationStats(response.data);
       setLoading(false);
     } catch (err) {
       setError('Failed to load lecturers');
@@ -29,24 +37,31 @@ const LecturerList = () => {
     }
   };
 
-  const calculateDepartmentCounts = (lecturers) => {
-    const counts = lecturers.reduce((acc, lecturer) => {
-      acc[lecturer.department] = (acc[lecturer.department] || 0) + 1;
-      return acc;
-    }, {});
+  const calculateDepartmentCounts = () => {
+    const counts = {};
+    
+    lecturers.forEach(lecturer => {
+      if (lecturer.department) {
+        counts[lecturer.department] = (counts[lecturer.department] || 0) + 1;
+      }
+    });
+    
     setDepartmentCounts(counts);
   };
 
-  const calculateQualificationStats = (lecturerData) => {
-    const qualCounts = lecturerData.reduce((acc, lecturer) => {
-      acc[lecturer.qualification] = (acc[lecturer.qualification] || 0) + 1;
-      return acc;
-    }, {});
+  const calculateQualificationStats = () => {
+    const qualCounts = {};
+    
+    lecturers.forEach(lecturer => {
+      if (lecturer.qualification) {
+        qualCounts[lecturer.qualification] = (qualCounts[lecturer.qualification] || 0) + 1;
+      }
+    });
     
     const qualStats = Object.entries(qualCounts).map(([qualification, count]) => ({
       qualification,
       count,
-      percentage: ((count / lecturerData.length) * 100).toFixed(1)
+      percentage: ((count / lecturers.length) * 100).toFixed(1)
     }));
     
     qualStats.sort((a, b) => b.count - a.count);
@@ -57,10 +72,8 @@ const LecturerList = () => {
     if (window.confirm('Are you sure you want to delete this lecturer?')) {
       try {
         await deleteLecturer(id);
-        const updatedLecturers = lecturers.filter(lecturer => lecturer.id !== id);
-        setLecturers(updatedLecturers);
-        calculateDepartmentCounts(updatedLecturers);
-        calculateQualificationStats(updatedLecturers);
+        setLecturers(prevLecturers => prevLecturers.filter(lecturer => lecturer.id !== id));
+        // Stats will be recalculated via useEffect when lecturers state changes
       } catch (err) {
         setError('Failed to delete lecturer');
         console.error(err);
@@ -97,13 +110,14 @@ const LecturerList = () => {
         <h2 className="m-0">Lecturers</h2>
         <div>
           <Link to="/lecturers/create" className="btn btn-success me-2">+ Add New Lecturer</Link>
-          <button onClick={toggleSummaryReport} className="btn btn-info">
+         <button onClick={toggleSummaryReport} className="btn btn-info">
             {showSummaryReport ? '📋 Return to List' : '📊 Generate Summary Report'}
           </button>
         </div>
       </div>
 
       {!showSummaryReport ? (
+        
         <div className="table-responsive mt-3">
           <table className="table table-hover">
             <thead style={{ backgroundColor: '#003366', color: 'white' }}>
@@ -142,6 +156,71 @@ const LecturerList = () => {
         <div className="mt-4">
           <h3>Lecturer Summary Report</h3>
           <p>Generated on: {new Date().toLocaleDateString()}</p>
+          
+          <div className="card mb-4">
+            <div className="card-header bg-primary text-white">
+              <h5 className="m-0">Total Lecturers: {totalLecturers}</h5>
+            </div>
+          </div>
+          
+          <div className="row">
+            <div className="col-md-6">
+              <div className="card mb-4">
+                <div className="card-header bg-info text-white">
+                  <h5 className="m-0">Department Distribution</h5>
+                </div>
+                <div className="card-body">
+                  <table className="table table-striped">
+                    <thead>
+                      <tr>
+                        <th>Department</th>
+                        <th>Count</th>
+                        <th>Percentage</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {Object.entries(departmentCounts).map(([department, count]) => (
+                        <tr key={department}>
+                          <td>{department}</td>
+                          <td>{count}</td>
+                          <td>{((count / totalLecturers) * 100).toFixed(1)}%</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+            
+            <div className="col-md-6">
+              <div className="card mb-4">
+                <div className="card-header bg-success text-white">
+                  <h5 className="m-0">Qualification Statistics</h5>
+                </div>
+                <div className="card-body">
+                  <table className="table table-striped">
+                    <thead>
+                      <tr>
+                        <th>Qualification</th>
+                        <th>Count</th>
+                        <th>Percentage</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {qualificationStats.map(stat => (
+                        <tr key={stat.qualification}>
+                          <td>{stat.qualification}</td>
+                          <td>{stat.count}</td>
+                          <td>{stat.percentage}%</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+          
           <button onClick={handleExportCSV} className="btn btn-success">📥 Export CSV</button>
         </div>
       )}
