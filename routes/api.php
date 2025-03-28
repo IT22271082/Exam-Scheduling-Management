@@ -18,3 +18,6 @@ Route::middleware('api')->group(function () {
     Route::resource('lecturers', LecturerController::class);
 });
 
+
+Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
+

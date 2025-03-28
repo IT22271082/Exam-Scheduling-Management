@@ -86,10 +86,10 @@ const LecturerList = () => {
   };
 
   const handleExportCSV = () => {
-    let csvContent = "data:text/csv;charset=utf-8,Lecturer ID,Name,Email,Department,Qualification\n";
+    let csvContent = "data:text/csv;charset=utf-8,ID,Name,Email,Phone Number,Department,Qualification,Lecturer_ID\n";
     
     lecturers.forEach(lecturer => {
-      csvContent += `${lecturer.id},${lecturer.name},${lecturer.email},${lecturer.department},${lecturer.qualification}\n`;
+      csvContent += `${lecturer.id},${lecturer.name},${lecturer.email},${lecturer.phone},${lecturer.department},${lecturer.qualification},${lecturer.lecturer_id}\n`;
     });
     
     const encodedUri = encodeURI(csvContent);
@@ -127,6 +127,7 @@ const LecturerList = () => {
                 <th>Email</th>
                 <th>Department</th>
                 <th>Qualification</th>
+                <th>lecturer_ID</th>
                 <th className="text-center">Actions</th>
               </tr>
             </thead>
@@ -141,6 +142,7 @@ const LecturerList = () => {
                     <td>{lecturer.email}</td>
                     <td>{lecturer.department}</td>
                     <td>{lecturer.qualification}</td>
+                    <td>{lecturer.lecturer_id}</td>
                     <td className="text-center">
                       <Link to={`/lecturers/${lecturer.id}`} className="btn btn-info btn-sm me-2">View</Link>
                       <Link to={`/lecturers/${lecturer.id}/edit`} className="btn btn-warning btn-sm me-2">Edit</Link>

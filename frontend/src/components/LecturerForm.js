@@ -183,10 +183,10 @@ const LecturerForm = () => {
                 required
               >
                 <option value="">Select Department</option>
-                <option value="Computer Science">Computer Science (CS)</option>
+                <option value="Computer Science (CS)">Computer Science (CS)</option>
                 <option value="Software Engineering">Software Engineering</option>
-                <option value="Information Technology">Information Technology (IT)</option>
-                <option value="Artificial Intelligence">Artificial Intelligence (AI)</option>
+                <option value="Information Technology (IT)">Information Technology (IT)</option>
+                <option value="Artificial Intelligence (AI)">Artificial Intelligence (AI)</option>
                 <option value="Cybersecurity">Cybersecurity</option>
                 <option value="Data Science">Data Science</option>
               </select>
