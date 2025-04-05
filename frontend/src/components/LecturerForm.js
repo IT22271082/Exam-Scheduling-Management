@@ -117,8 +117,10 @@ const LecturerForm = () => {
     try {
       if (isEditMode) {
         await updateLecturer(id, dataToSubmit);
+        alert("Lecturer updated successfully!");
       } else {
         await createLecturer(dataToSubmit);
+        alert("Lecturer added successfully!");
       }
       navigate("/lecture-management");
     } catch (err) {
@@ -242,6 +244,19 @@ const LecturerForm = () => {
                 <option value="Junior">Junior</option>
               </select>
               {errors.type && <div className="invalid-feedback">{errors.type}</div>}
+            </div>
+
+            <div className="mb-3">
+              <label htmlFor="bio" className="form-label">Bio</label>
+              <textarea
+                className={`form-control ${errors.bio ? "is-invalid" : ""}`}
+                id="bio"
+                name="bio"
+                value={formData.bio}
+                onChange={handleChange}
+                rows="4"
+              />
+              {errors.bio && <div className="invalid-feedback">{errors.bio}</div>}
             </div>
 
             {isEditMode && (
