@@ -31,21 +31,20 @@ class Lecturer extends Model
         });
     }
 
+    // Function to generate a random 4-digit lecturer ID with type
     private static function generateLecturerID($type)
     {
         $prefix = ($type === 'Senior') ? 'SEN' : 'JUN';
 
-        // Get the last assigned ID for this type
-        $latestLecturer = self::where('type', $type)
-            ->orderBy('id', 'desc')
-            ->first();
+        // Generate a random 4-digit number (between 1000 and 9999)
+        $randomNumber = rand(1000, 9999);
 
-        // Extract last number
-        $lastNumber = $latestLecturer ? (int)substr($latestLecturer->lecturer_id, 4) : 0;
+        // Check if the generated ID already exists
+        while (self::where('lecturer_id', "{$prefix}-{$randomNumber}")->exists()) {
+            // Regenerate the number if it already exists
+            $randomNumber = rand(1000, 9999);
+        }
 
-        // Increment and format as 3-digit number
-        $newNumber = str_pad($lastNumber + 1, 3, '0', STR_PAD_LEFT);
-
-        return "{$prefix}-{$newNumber}";
+        return "{$prefix}-{$randomNumber}";
     }
 }

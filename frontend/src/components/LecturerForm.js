@@ -14,10 +14,10 @@ const LecturerForm = () => {
     department: "",
     qualification: "",
     bio: "",
-    type: "", // Senior or Junior
-    lecturer_id: "", // Auto-generated ID
+    type: "",
   });
 
+  const [lecturerID, setLecturerID] = useState(""); // For display in edit mode
   const [loading, setLoading] = useState(isEditMode);
   const [error, setError] = useState(null);
   const [errors, setErrors] = useState({});
@@ -41,9 +41,9 @@ const LecturerForm = () => {
         qualification: lecturer.qualification,
         bio: lecturer.bio || "",
         type: lecturer.type || "",
-        lecturer_id: lecturer.lecturer_id || "",
       });
 
+      setLecturerID(lecturer.lecturer_id);
       setLoading(false);
     } catch (err) {
       setError("Failed to load lecturer data");
@@ -54,27 +54,11 @@ const LecturerForm = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
 
-    // Ensure phone number contains exactly 10 digits
     if (name === "phone" && value && !/^\d{0,10}$/.test(value)) {
-      return; // Prevent input if it's more than 10 digits or contains non-numeric characters
+      return;
     }
 
     setFormData({ ...formData, [name]: value });
-  };
-
-  const generateLecturerID = (type) => {
-    const prefix = type === "Senior" ? "SNR" : "JNR";
-    const randomNum = Math.floor(1000 + Math.random() * 9000); // Generate a random 4-digit number
-    return `${prefix}-${randomNum}`;
-  };
-
-  const handleTypeChange = (e) => {
-    const newType = e.target.value;
-    setFormData({
-      ...formData,
-      type: newType,
-      lecturer_id: generateLecturerID(newType), // Generate new ID
-    });
   };
 
   const validateEmail = (email) => {
@@ -86,27 +70,30 @@ const LecturerForm = () => {
     e.preventDefault();
     setErrors({});
 
-    // Check if email is valid
     if (!validateEmail(formData.email)) {
       setErrors((prev) => ({ ...prev, email: "Invalid email format" }));
       return;
     }
 
-    try {
-      if (isEditMode) {
-        await updateLecturer(id, formData);
-      } else {
-        await createLecturer(formData);
-      }
-      navigate("/lecture-management");
-    } catch (err) {
-      if (err.response && err.response.data && err.response.data.errors) {
-        setErrors(err.response.data.errors);
-      } else {
-        setError("Failed to save lecturer");
-      }
+    // Exclude lecturer_id from form data before submitting
+  const dataToSubmit = { ...formData };
+  delete dataToSubmit.lecturer_id;  // Exclude lecturer_id from submission
+
+  try {
+    if (isEditMode) {
+      await updateLecturer(id, dataToSubmit); // Send the updated data (without lecturer_id)
+    } else {
+      await createLecturer(dataToSubmit); // Send the new lecturer data
     }
-  };
+    navigate("/lecture-management");
+  } catch (err) {
+    if (err.response && err.response.data && err.response.data.errors) {
+      setErrors(err.response.data.errors);
+    } else {
+      setError("Failed to save lecturer");
+    }
+  }
+};
 
   if (loading) return <div className="text-center p-4">Loading...</div>;
 
@@ -117,7 +104,7 @@ const LecturerForm = () => {
       {error && <div className="alert alert-danger">{error}</div>}
 
       <form onSubmit={handleSubmit}>
-        {/* Personal Details Card */}
+        {/* Personal Details */}
         <div className="card mb-4">
           <div className="card-header bg-primary text-white">
             <strong>Personal Details</strong>
@@ -166,7 +153,7 @@ const LecturerForm = () => {
           </div>
         </div>
 
-        {/* Academic Details Card */}
+        {/* Academic Details */}
         <div className="card mb-4">
           <div className="card-header bg-primary text-white">
             <strong>Academic Details</strong>
@@ -214,7 +201,7 @@ const LecturerForm = () => {
                 id="type"
                 name="type"
                 value={formData.type}
-                onChange={handleTypeChange}
+                onChange={handleChange}
                 required
               >
                 <option value="">Select Type</option>
@@ -224,17 +211,20 @@ const LecturerForm = () => {
               {errors.type && <div className="invalid-feedback">{errors.type}</div>}
             </div>
 
-            <div className="mb-3">
-              <label htmlFor="lecturer_id" className="form-label">Lecturer ID</label>
-              <input
-                type="text"
-                className="form-control"
-                id="lecturer_id"
-                name="lecturer_id"
-                value={formData.lecturer_id}
-                readOnly
-              />
-            </div>
+            {isEditMode && (
+  <div className="mb-3">
+    <label htmlFor="lecturer_id" className="form-label">Lecturer ID</label>
+    <input
+      type="text"
+      className="form-control"
+      id="lecturer_id"
+      name="lecturer_id"
+      value={lecturerID}
+      readOnly
+    />
+  </div>
+)}
+
           </div>
         </div>
 

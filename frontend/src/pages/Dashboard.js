@@ -1,32 +1,48 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 import axios from "axios";
 
 function Dashboard() {
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-    const navigate = useNavigate(); // Add useNavigate hook
+    const navigate = useNavigate();
 
-    const handleLogout = async () => {
+    // State for total lecturers count
+    const [totalLecturers, setTotalLecturers] = useState(0);
+
+    // Function to fetch lecturers
+    const fetchLecturers = async () => {
         try {
-            // Get token from local storage
             const token = localStorage.getItem("token");
-
-            // Send logout request
-            await axios.post("http://localhost:8000/api/logout", {}, {
+            const response = await axios.get("http://localhost:8000/api/lecturers", {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
             });
 
-            // Remove token from local storage
-            localStorage.removeItem("token");
+            // Assuming API returns an array of lecturers
+            setTotalLecturers(response.data.length);
+        } catch (error) {
+            console.error("Failed to fetch lecturers:", error);
+        }
+    };
 
-            // Redirect to login page using navigate
+    useEffect(() => {
+        fetchLecturers();
+    }, []);
+
+    const handleLogout = async () => {
+        try {
+            const token = localStorage.getItem("token");
+            await axios.post("http://localhost:8000/api/logout", {}, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            localStorage.removeItem("token");
             navigate("/");
         } catch (error) {
             console.error("Logout failed:", error);
-            // Optional: Add user-friendly error handling
             alert("Logout failed. Please try again.");
         }
     };
@@ -54,7 +70,7 @@ function Dashboard() {
                     </li>
                     <li className="nav-item mb-2">
                         <Link to="/" className="nav-link text-white">
-                            👨‍🎓 Exam Schedulling
+                            📅 Exam Scheduling
                         </Link>
                     </li>
                     <li className="nav-item mb-2">
@@ -77,7 +93,43 @@ function Dashboard() {
             {/* Main Content */}
             <div className="p-4 w-100">
                 <h2>Welcome to Admin Dashboard</h2>
-                <p>Manage your lectures and resources efficiently.</p>
+                <p>Manage your lectures, students, resources, and exams efficiently.</p>
+
+                {/* Summary Section */}
+                <div className="row mt-4">
+                    <div className="col-md-4">
+                        <div className="card text-white bg-primary mb-3">
+                            <div className="card-body">
+                                <h5 className="card-title">Total Lecturers</h5>
+                                <p className="card-text">{totalLecturers}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="col-md-3">
+                        <div className="card text-white bg-success mb-3">
+                            <div className="card-body">
+                                <h5 className="card-title">Students</h5>
+                                <p className="card-text"></p>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="col-md-3">
+                        <div className="card text-white bg-warning mb-3">
+                            <div className="card-body">
+                                <h5 className="card-title">Resources</h5>
+                                <p className="card-text"></p>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="col-md-3">
+                        <div className="card text-white bg-danger mb-3">
+                            <div className="card-body">
+                                <h5 className="card-title">Exams Scheduled</h5>
+                                <p className="card-text"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     );

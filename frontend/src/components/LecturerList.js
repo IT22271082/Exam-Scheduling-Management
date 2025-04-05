@@ -89,8 +89,9 @@ const LecturerList = () => {
     let csvContent = "data:text/csv;charset=utf-8,ID,Name,Email,Phone Number,Department,Qualification,Lecturer_ID\n";
     
     lecturers.forEach(lecturer => {
-      csvContent += `${lecturer.id},${lecturer.name},${lecturer.email},${lecturer.phone},${lecturer.department},${lecturer.qualification},${lecturer.lecturer_id}\n`;
+      csvContent += `${lecturer.id},${lecturer.name},${lecturer.email},${lecturer.phone || ''},${lecturer.department},${lecturer.qualification},${lecturer.lecturer_id}\n`;
     });
+    
     
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
@@ -133,7 +134,7 @@ const LecturerList = () => {
             </thead>
             <tbody>
               {lecturers.length === 0 ? (
-                <tr><td colSpan="6" className="text-center">No lecturers found</td></tr>
+                <tr><td colSpan="7" className="text-center">No lecturers found</td></tr>
               ) : (
                 lecturers.map(lecturer => (
                   <tr key={lecturer.id}>
