@@ -17,7 +17,7 @@ const LecturerForm = () => {
     type: "",
   });
 
-  const [lecturerID, setLecturerID] = useState(""); // For display in edit mode
+  const [lecturerID, setLecturerID] = useState("");
   const [loading, setLoading] = useState(isEditMode);
   const [error, setError] = useState(null);
   const [errors, setErrors] = useState({});
@@ -51,49 +51,84 @@ const LecturerForm = () => {
     }
   };
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-
-    if (name === "phone" && value && !/^\d{0,10}$/.test(value)) {
-      return;
-    }
-
-    setFormData({ ...formData, [name]: value });
-  };
-
   const validateEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
 
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    let errorMsg = "";
+
+    if (name === "phone") {
+      if (!/^\d*$/.test(value)) {
+        errorMsg = "Phone number must contain only digits";
+      } else if (value.length > 10) {
+        errorMsg = "Phone number can't be longer than 10 digits";
+      } else if (value.length > 0 && value.length < 10) {
+        errorMsg = "Phone number must be 10 digits";
+      }
+    } else {
+      if (!value.trim()) {
+        errorMsg = "This field is required";
+      } else if (name === "email" && !validateEmail(value)) {
+        errorMsg = "Invalid email format";
+      }
+    }
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+
+    setErrors((prev) => ({
+      ...prev,
+      [name]: errorMsg,
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setErrors({});
 
-    if (!validateEmail(formData.email)) {
-      setErrors((prev) => ({ ...prev, email: "Invalid email format" }));
+    const newErrors = {};
+
+    ["name", "email", "department", "qualification", "type", "phone"].forEach((field) => {
+      if (!formData[field]?.trim()) {
+        newErrors[field] = "This field is required";
+      }
+    });
+
+    if (formData.email && !validateEmail(formData.email)) {
+      newErrors.email = "Invalid email format";
+    }
+
+    if (formData.phone && !/^\d{10}$/.test(formData.phone)) {
+      newErrors.phone = "Phone number must be exactly 10 digits";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
 
-    // Exclude lecturer_id from form data before submitting
-  const dataToSubmit = { ...formData };
-  delete dataToSubmit.lecturer_id;  // Exclude lecturer_id from submission
+    const dataToSubmit = { ...formData };
+    delete dataToSubmit.lecturer_id;
 
-  try {
-    if (isEditMode) {
-      await updateLecturer(id, dataToSubmit); // Send the updated data (without lecturer_id)
-    } else {
-      await createLecturer(dataToSubmit); // Send the new lecturer data
+    try {
+      if (isEditMode) {
+        await updateLecturer(id, dataToSubmit);
+      } else {
+        await createLecturer(dataToSubmit);
+      }
+      navigate("/lecture-management");
+    } catch (err) {
+      if (err.response?.data?.errors) {
+        setErrors(err.response.data.errors);
+      } else {
+        setError("Failed to save lecturer");
+      }
     }
-    navigate("/lecture-management");
-  } catch (err) {
-    if (err.response && err.response.data && err.response.data.errors) {
-      setErrors(err.response.data.errors);
-    } else {
-      setError("Failed to save lecturer");
-    }
-  }
-};
+  };
 
   if (loading) return <div className="text-center p-4">Loading...</div>;
 
@@ -104,7 +139,6 @@ const LecturerForm = () => {
       {error && <div className="alert alert-danger">{error}</div>}
 
       <form onSubmit={handleSubmit}>
-        {/* Personal Details */}
         <div className="card mb-4">
           <div className="card-header bg-primary text-white">
             <strong>Personal Details</strong>
@@ -153,7 +187,6 @@ const LecturerForm = () => {
           </div>
         </div>
 
-        {/* Academic Details */}
         <div className="card mb-4">
           <div className="card-header bg-primary text-white">
             <strong>Academic Details</strong>
@@ -212,19 +245,18 @@ const LecturerForm = () => {
             </div>
 
             {isEditMode && (
-  <div className="mb-3">
-    <label htmlFor="lecturer_id" className="form-label">Lecturer ID</label>
-    <input
-      type="text"
-      className="form-control"
-      id="lecturer_id"
-      name="lecturer_id"
-      value={lecturerID}
-      readOnly
-    />
-  </div>
-)}
-
+              <div className="mb-3">
+                <label htmlFor="lecturer_id" className="form-label">Lecturer ID</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  id="lecturer_id"
+                  name="lecturer_id"
+                  value={lecturerID}
+                  readOnly
+                />
+              </div>
+            )}
           </div>
         </div>
 

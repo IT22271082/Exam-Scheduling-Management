@@ -10,12 +10,12 @@ const LecturerList = () => {
   const [showSummaryReport, setShowSummaryReport] = useState(false);
   const [qualificationStats, setQualificationStats] = useState([]);
   const [totalLecturers, setTotalLecturers] = useState(0);
+  const [searchTerm, setSearchTerm] = useState(""); // ✅ NEW
 
   useEffect(() => {
     fetchLecturers();
   }, []);
 
-  // Update stats whenever lecturers data changes
   useEffect(() => {
     if (lecturers.length > 0) {
       calculateDepartmentCounts();
@@ -39,31 +39,26 @@ const LecturerList = () => {
 
   const calculateDepartmentCounts = () => {
     const counts = {};
-    
     lecturers.forEach(lecturer => {
       if (lecturer.department) {
         counts[lecturer.department] = (counts[lecturer.department] || 0) + 1;
       }
     });
-    
     setDepartmentCounts(counts);
   };
 
   const calculateQualificationStats = () => {
     const qualCounts = {};
-    
     lecturers.forEach(lecturer => {
       if (lecturer.qualification) {
         qualCounts[lecturer.qualification] = (qualCounts[lecturer.qualification] || 0) + 1;
       }
     });
-    
     const qualStats = Object.entries(qualCounts).map(([qualification, count]) => ({
       qualification,
       count,
       percentage: ((count / lecturers.length) * 100).toFixed(1)
     }));
-    
     qualStats.sort((a, b) => b.count - a.count);
     setQualificationStats(qualStats);
   };
@@ -73,7 +68,6 @@ const LecturerList = () => {
       try {
         await deleteLecturer(id);
         setLecturers(prevLecturers => prevLecturers.filter(lecturer => lecturer.id !== id));
-        // Stats will be recalculated via useEffect when lecturers state changes
       } catch (err) {
         setError('Failed to delete lecturer');
         console.error(err);
@@ -86,13 +80,10 @@ const LecturerList = () => {
   };
 
   const handleExportCSV = () => {
-    let csvContent = "data:text/csv;charset=utf-8,ID,Name,Email,Phone Number,Department,Qualification,Lecturer_ID\n";
-    
+    let csvContent = "data:text/csv;charset=utf-8,Name,Email,Phone Number,Department,Qualification,Lecturer_ID\n";
     lecturers.forEach(lecturer => {
-      csvContent += `${lecturer.id},${lecturer.name},${lecturer.email},${lecturer.phone || ''},${lecturer.department},${lecturer.qualification},${lecturer.lecturer_id}\n`;
+      csvContent += `${lecturer.name},${lecturer.email},${lecturer.phone || ''},${lecturer.department},${lecturer.qualification},${lecturer.lecturer_id}\n`;
     });
-    
-    
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
@@ -105,67 +96,82 @@ const LecturerList = () => {
   if (loading) return <div className="text-center p-4">Loading...</div>;
   if (error) return <div className="alert alert-danger">{error}</div>;
 
+  // Filtered lecturers by department name
+  const filteredLecturers = lecturers.filter(lecturer =>
+    lecturer.department?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <div className="container mt-4">
       <div className="p-3 text-white d-flex justify-content-between align-items-center" style={{ backgroundColor: '#003366', borderRadius: '8px' }}>
         <h2 className="m-0">Lecturers</h2>
         <div>
           <Link to="/lecturers/create" className="btn btn-success me-2">+ Add New Lecturer</Link>
-         <button onClick={toggleSummaryReport} className="btn btn-info">
+          <button onClick={toggleSummaryReport} className="btn btn-info">
             {showSummaryReport ? '📋 Return to List' : '📊 Generate Summary Report'}
           </button>
         </div>
       </div>
 
       {!showSummaryReport ? (
-        
-        <div className="table-responsive mt-3">
-          <table className="table table-hover">
-            <thead style={{ backgroundColor: '#003366', color: 'white' }}>
-              <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Department</th>
-                <th>Qualification</th>
-                <th>lecturer_ID</th>
-                <th className="text-center">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {lecturers.length === 0 ? (
-                <tr><td colSpan="7" className="text-center">No lecturers found</td></tr>
-              ) : (
-                lecturers.map(lecturer => (
-                  <tr key={lecturer.id}>
-                    <td>{lecturer.id}</td>
-                    <td>{lecturer.name}</td>
-                    <td>{lecturer.email}</td>
-                    <td>{lecturer.department}</td>
-                    <td>{lecturer.qualification}</td>
-                    <td>{lecturer.lecturer_id}</td>
-                    <td className="text-center">
-                      <Link to={`/lecturers/${lecturer.id}`} className="btn btn-info btn-sm me-2">View</Link>
-                      <Link to={`/lecturers/${lecturer.id}/edit`} className="btn btn-warning btn-sm me-2">Edit</Link>
-                      <button onClick={() => handleDelete(lecturer.id)} className="btn btn-danger btn-sm">Delete</button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+        <>
+          {/* 🔍 Department Search Input */}
+          <div className="mt-3">
+            <input
+              type="text"
+              className="form-control"
+              placeholder="🔍 Search by Department..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+
+          <div className="table-responsive mt-3">
+            <table className="table table-hover">
+              <thead style={{ backgroundColor: '#003366', color: 'white' }}>
+                <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Department</th>
+                  <th>Qualification</th>
+                  <th>Lecturer ID</th>
+                  <th className="text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredLecturers.length === 0 ? (
+                  <tr><td colSpan="6" className="text-center">No lecturers found for "{searchTerm}"</td></tr>
+                ) : (
+                  filteredLecturers.map(lecturer => (
+                    <tr key={lecturer.id}>
+                      <td>{lecturer.name}</td>
+                      <td>{lecturer.email}</td>
+                      <td>{lecturer.department}</td>
+                      <td>{lecturer.qualification}</td>
+                      <td>{lecturer.lecturer_id}</td>
+                      <td className="text-center">
+                        <Link to={`/lecturers/${lecturer.id}`} className="btn btn-info btn-sm me-2">View</Link>
+                        <Link to={`/lecturers/${lecturer.id}/edit`} className="btn btn-warning btn-sm me-2">Edit</Link>
+                        <button onClick={() => handleDelete(lecturer.id)} className="btn btn-danger btn-sm">Delete</button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </>
       ) : (
         <div className="mt-4">
           <h3>Lecturer Summary Report</h3>
           <p>Generated on: {new Date().toLocaleDateString()}</p>
-          
+
           <div className="card mb-4">
             <div className="card-header bg-primary text-white">
               <h5 className="m-0">Total Lecturers: {totalLecturers}</h5>
             </div>
           </div>
-          
+
           <div className="row">
             <div className="col-md-6">
               <div className="card mb-4">
@@ -194,7 +200,7 @@ const LecturerList = () => {
                 </div>
               </div>
             </div>
-            
+
             <div className="col-md-6">
               <div className="card mb-4">
                 <div className="card-header bg-success text-white">
@@ -223,7 +229,7 @@ const LecturerList = () => {
               </div>
             </div>
           </div>
-          
+
           <button onClick={handleExportCSV} className="btn btn-success">📥 Export CSV</button>
         </div>
       )}
