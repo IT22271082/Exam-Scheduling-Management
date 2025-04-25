@@ -6,28 +6,19 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     *
-     * @return void
-     */
     public function up()
     {
         Schema::create('resource_allocations', function (Blueprint $table) {
             $table->id();
-            $table->string('resource_name'); // Name of the resource (e.g., Room A, Projector 1)
-            $table->string('resource_type'); // Type of resource (e.g., Room, Equipment)
-            $table->dateTime('allocation_date'); // Date and time of allocation
-            $table->string('status')->default('available'); // Status of the resource (e.g., available, allocated)
-            $table->timestamps(); // created_at and updated_at timestamps
+            $table->string('resource_name');
+            $table->string('resource_type');
+            $table->dateTime('allocation_date');
+            $table->integer('duration'); // Duration in minutes
+            $table->string('status')->default('available');
+            $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     *
-     * @return void
-     */
     public function down()
     {
         Schema::dropIfExists('resource_allocations');
