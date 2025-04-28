@@ -5,28 +5,6 @@ import axios from 'axios';
 // Set base URL for API requests
 axios.defaults.baseURL = 'http://127.0.0.1:8000/api';
 
-// Reusable Alert Message component
-const MessageAlert = ({ message }) => {
-    if (!message.text) return null;
-
-    const alertClasses = {
-        success: 'bg-green-100 border-green-400 text-green-700',
-        error: 'bg-red-100 border-red-400 text-red-700',
-        warning: 'bg-yellow-100 border-yellow-400 text-yellow-700',
-    };
-
-    return (
-        <div
-            className={`border px-4 py-3 rounded relative mb-4 shadow-md ${
-                alertClasses[message.type] || 'bg-blue-100 border-blue-400 text-blue-700'
-            }`}
-            role="alert"
-        >
-            <span className="block sm:inline font-medium">{message.text}</span>
-        </div>
-    );
-};
-
 const MedicalFormSubmission = ({ studentId }) => {
     const [formData, setFormData] = useState({
         exam_name: '',
@@ -39,21 +17,21 @@ const MedicalFormSubmission = ({ studentId }) => {
     const [message, setMessage] = useState({ text: '', type: '' });
 
     useEffect(() => {
-        if (studentId) fetchSubmissions();
-        else {
-            setMessage({ text: 'Student ID is missing. Please login again.', type: 'error' });
+        if (studentId) {
+            fetchSubmissions();
+        } else {
+            setMessage({ text: 'Student ID is missing.', type: 'error' });
         }
     }, [studentId]);
 
     const fetchSubmissions = async () => {
         setIsLoading(prev => ({ ...prev, submissions: true }));
-        setMessage({ text: '', type: '' });
         try {
             const { data } = await axios.get(`/students/${studentId}/medical-forms`);
             setSubmissions(data);
         } catch (error) {
             console.error('Error fetching submissions:', error);
-            setMessage({ text: 'Failed to load submissions. Please try again later.', type: 'error' });
+            setMessage({ text: 'Failed to load submissions.', type: 'error' });
         } finally {
             setIsLoading(prev => ({ ...prev, submissions: false }));
         }
@@ -88,9 +66,9 @@ const MedicalFormSubmission = ({ studentId }) => {
             await fetchSubmissions();
         } catch (error) {
             console.error('Submission error:', error);
-            let errorMessage = 'Error submitting form. Please try again.';
-            if (error.response?.status === 422) errorMessage = 'Validation error. Please check your inputs.';
-            if (error.response?.status === 413) errorMessage = 'File size too large. Max 2MB allowed.';
+            let errorMessage = 'Error submitting form.';
+            if (error.response?.status === 422) errorMessage = 'Validation error.';
+            if (error.response?.status === 413) errorMessage = 'File too large. Max 2MB.';
             setMessage({ text: errorMessage, type: 'error' });
         } finally {
             setIsLoading(prev => ({ ...prev, form: false }));
@@ -99,64 +77,71 @@ const MedicalFormSubmission = ({ studentId }) => {
 
     return (
         <div className="container mx-auto p-6">
-            <h2 className="text-3xl font-bold text-gray-800 mb-8 text-center">Medical Absentee Form</h2>
+            <h2 className="text-4xl font-extrabold text-center text-blue-700 mb-8">Submit Medical Absentee Form</h2>
 
-            <MessageAlert message={message} />
+            {/* Message Alert */}
+            {message.text && (
+                <div
+                    className={`mb-6 text-center py-3 px-6 rounded-lg ${
+                        message.type === 'success'
+                            ? 'bg-green-100 text-green-700 border border-green-300'
+                            : 'bg-red-100 text-red-700 border border-red-300'
+                    }`}
+                >
+                    {message.text}
+                </div>
+            )}
 
             {/* Form */}
-            <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-md mb-12">
+            <form onSubmit={handleSubmit} className="bg-gradient-to-br from-blue-100 to-indigo-100 p-8 rounded-3xl shadow-lg mb-12">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <label className="block text-gray-700 font-semibold mb-2">Exam Name</label>
+                        <label className="block mb-2 text-lg font-semibold text-gray-700">Exam Name</label>
                         <input
                             type="text"
                             name="exam_name"
                             value={formData.exam_name}
                             onChange={handleChange}
-                            className="w-full border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-400 focus:outline-none"
-                            required
-                            disabled={isLoading.form}
+                            className="w-full p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-400 outline-none"
                             placeholder="Enter exam name"
+                            required
                         />
                     </div>
 
                     <div>
-                        <label className="block text-gray-700 font-semibold mb-2">Exam Date</label>
+                        <label className="block mb-2 text-lg font-semibold text-gray-700">Exam Date</label>
                         <input
                             type="date"
                             name="exam_date"
                             value={formData.exam_date}
                             onChange={handleChange}
-                            className="w-full border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-400 focus:outline-none"
+                            className="w-full p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-400 outline-none"
                             required
-                            disabled={isLoading.form}
                         />
                     </div>
 
                     <div className="md:col-span-2">
-                        <label className="block text-gray-700 font-semibold mb-2">Medical Reason</label>
+                        <label className="block mb-2 text-lg font-semibold text-gray-700">Medical Reason</label>
                         <textarea
                             name="medical_reason"
                             value={formData.medical_reason}
                             onChange={handleChange}
-                            className="w-full border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-400 focus:outline-none"
+                            className="w-full p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-400 outline-none"
                             rows="4"
+                            placeholder="Describe the medical reason"
                             required
-                            disabled={isLoading.form}
-                            placeholder="Describe your medical reason"
                         ></textarea>
                     </div>
 
                     <div className="md:col-span-2">
-                        <label className="block text-gray-700 font-semibold mb-2">Medical Document (PDF/JPG/PNG)</label>
+                        <label className="block mb-2 text-lg font-semibold text-gray-700">Upload Medical Document</label>
                         <input
                             type="file"
                             name="medical_document"
                             onChange={handleFileChange}
-                            className="w-full border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-400 focus:outline-none"
+                            className="w-full p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-400 outline-none"
                             accept=".pdf,.jpg,.jpeg,.png"
                             required
-                            disabled={isLoading.form}
                         />
                     </div>
                 </div>
@@ -164,66 +149,58 @@ const MedicalFormSubmission = ({ studentId }) => {
                 <button
                     type="submit"
                     disabled={isLoading.form}
-                    className="w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition-all disabled:bg-blue-300"
+                    className="w-full mt-8 bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 rounded-full transition-all duration-300 shadow-md hover:shadow-lg disabled:opacity-50"
                 >
-                    {isLoading.form ? (
-                        <div className="flex items-center justify-center space-x-2">
-                            <svg className="animate-spin h-5 w-5 text-white" viewBox="0 0 24 24">
-                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0A12 12 0 000 12h4z" />
-                            </svg>
-                            <span>Submitting...</span>
-                        </div>
-                    ) : 'Submit Form'}
+                    {isLoading.form ? 'Submitting...' : 'Submit Form'}
                 </button>
             </form>
 
-            {/* Submissions Table */}
-            <div className="bg-white p-6 rounded-lg shadow-md">
-                <h3 className="text-2xl font-bold text-gray-800 mb-6">Your Previous Submissions</h3>
+            {/* Submissions */}
+            <div className="bg-white p-6 rounded-2xl shadow-lg">
+                <h3 className="text-2xl font-bold text-gray-700 mb-6 text-center">Your Submissions</h3>
 
                 {isLoading.submissions ? (
-                    <div className="flex justify-center items-center py-10">
-                        <div className="animate-spin rounded-full h-10 w-10 border-b-4 border-blue-600"></div>
+                    <div className="flex justify-center items-center py-12">
+                        <div className="animate-spin h-10 w-10 border-4 border-blue-500 border-t-transparent rounded-full"></div>
                     </div>
                 ) : submissions.length === 0 ? (
-                    <p className="text-gray-500 text-center">No submissions found.</p>
+                    <p className="text-center text-gray-500">No submissions found.</p>
                 ) : (
                     <div className="overflow-x-auto">
-                        <table className="min-w-full bg-white border border-gray-200">
-                            <thead className="bg-blue-100">
+                        <table className="w-full table-auto border-collapse border border-gray-300">
+                            <thead className="bg-blue-200">
                                 <tr>
-                                    <th className="py-3 px-6 border-b text-left text-gray-600 font-bold">Exam Name</th>
-                                    <th className="py-3 px-6 border-b text-left text-gray-600 font-bold">Exam Date</th>
-                                    <th className="py-3 px-6 border-b text-left text-gray-600 font-bold">Submission Date</th>
-                                    <th className="py-3 px-6 border-b text-left text-gray-600 font-bold">Status</th>
-                                    <th className="py-3 px-6 border-b text-left text-gray-600 font-bold">Document</th>
+                                    <th className="border border-gray-300 px-4 py-2">Exam Name</th>
+                                    <th className="border border-gray-300 px-4 py-2">Exam Date</th>
+                                    <th className="border border-gray-300 px-4 py-2">Submitted</th>
+                                    <th className="border border-gray-300 px-4 py-2">Status</th>
+                                    <th className="border border-gray-300 px-4 py-2">Document</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {submissions.map((submission) => (
-                                    <tr key={submission.id} className="hover:bg-gray-50">
-                                        <td className="py-3 px-6 border-b">{submission.exam_name}</td>
-                                        <td className="py-3 px-6 border-b">{submission.exam_date}</td>
-                                        <td className="py-3 px-6 border-b">
-                                            {submission.submission_date ? new Date(submission.submission_date).toLocaleDateString() : 'N/A'}
+                                {submissions.map(sub => (
+                                    <tr key={sub.id} className="hover:bg-gray-100">
+                                        <td className="border border-gray-300 px-4 py-2">{sub.exam_name}</td>
+                                        <td className="border border-gray-300 px-4 py-2">{sub.exam_date}</td>
+                                        <td className="border border-gray-300 px-4 py-2">{sub.submission_date ? new Date(sub.submission_date).toLocaleDateString() : '-'}</td>
+                                        <td className="border border-gray-300 px-4 py-2 font-semibold">
+                                            <span className={`px-3 py-1 rounded-full text-white ${
+                                                sub.status === 'approved' ? 'bg-green-500' :
+                                                sub.status === 'rejected' ? 'bg-red-500' :
+                                                'bg-yellow-400'
+                                            }`}>
+                                                {sub.status?.charAt(0).toUpperCase() + sub.status?.slice(1)}
+                                            </span>
                                         </td>
-                                        <td className={`py-3 px-6 border-b font-semibold ${
-                                            submission.status === 'approved' ? 'text-green-600' :
-                                            submission.status === 'rejected' ? 'text-red-600' :
-                                            'text-yellow-600'
-                                        }`}>
-                                            {submission.status?.charAt(0).toUpperCase() + submission.status?.slice(1)}
-                                        </td>
-                                        <td className="py-3 px-6 border-b">
-                                            {submission.medical_document ? (
+                                        <td className="border border-gray-300 px-4 py-2">
+                                            {sub.medical_document ? (
                                                 <a
-                                                    href={`http://127.0.0.1:8000/storage/${submission.medical_document}`}
+                                                    href={`http://127.0.0.1:8000/storage/${sub.medical_document}`}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
                                                     className="text-blue-600 hover:underline"
                                                 >
-                                                    View Document
+                                                    View
                                                 </a>
                                             ) : 'N/A'}
                                         </td>
