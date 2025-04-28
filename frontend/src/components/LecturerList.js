@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { getLecturers, deleteLecturer } from '../services/api';
+import './LecturerList.css'; 
 
 const LecturerList = () => {
   const [lecturers, setLecturers] = useState([]);
@@ -10,7 +11,7 @@ const LecturerList = () => {
   const [showSummaryReport, setShowSummaryReport] = useState(false);
   const [qualificationStats, setQualificationStats] = useState([]);
   const [totalLecturers, setTotalLecturers] = useState(0);
-  const [searchTerm, setSearchTerm] = useState(""); // ✅ NEW
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     fetchLecturers();
@@ -96,14 +97,13 @@ const LecturerList = () => {
   if (loading) return <div className="text-center p-4">Loading...</div>;
   if (error) return <div className="alert alert-danger">{error}</div>;
 
-  // Filtered lecturers by department name
   const filteredLecturers = lecturers.filter(lecturer =>
     lecturer.department?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
     <div className="container mt-4">
-      <div className="p-3 text-white d-flex justify-content-between align-items-center" style={{ backgroundColor: '#003366', borderRadius: '8px' }}>
+      <div className="header-section">
         <h2 className="m-0">Lecturers</h2>
         <div>
           <Link to="/lecturers/create" className="btn btn-success me-2">+ Add New Lecturer</Link>
@@ -115,7 +115,6 @@ const LecturerList = () => {
 
       {!showSummaryReport ? (
         <>
-          {/* 🔍 Department Search Input */}
           <div className="mt-3">
             <input
               type="text"
@@ -128,7 +127,7 @@ const LecturerList = () => {
 
           <div className="table-responsive mt-3">
             <table className="table table-hover">
-              <thead style={{ backgroundColor: '#003366', color: 'white' }}>
+              <thead className="table-header">
                 <tr>
                   <th>Name</th>
                   <th>Email</th>
@@ -167,7 +166,7 @@ const LecturerList = () => {
           <p>Generated on: {new Date().toLocaleDateString()}</p>
 
           <div className="card mb-4">
-            <div className="card-header bg-primary text-white">
+            <div className="card-header summary-card-header-primary">
               <h5 className="m-0">Total Lecturers: {totalLecturers}</h5>
             </div>
           </div>
@@ -175,7 +174,7 @@ const LecturerList = () => {
           <div className="row">
             <div className="col-md-6">
               <div className="card mb-4">
-                <div className="card-header bg-info text-white">
+                <div className="card-header summary-card-header-info">
                   <h5 className="m-0">Department Distribution</h5>
                 </div>
                 <div className="card-body">
@@ -203,7 +202,7 @@ const LecturerList = () => {
 
             <div className="col-md-6">
               <div className="card mb-4">
-                <div className="card-header bg-success text-white">
+                <div className="card-header summary-card-header-success">
                   <h5 className="m-0">Qualification Statistics</h5>
                 </div>
                 <div className="card-body">
