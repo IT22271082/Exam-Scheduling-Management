@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 const ExamSchedule = () => {
   const [schedules, setSchedules] = useState([]);
@@ -36,14 +38,36 @@ const ExamSchedule = () => {
     }
   };
 
+  const generateReport = () => {
+    const doc = new jsPDF();
+    doc.text("📄 Exam Schedule Report", 14, 10);
+
+    autoTable(doc, { 
+      head: [["Module Code", "Date", "Start Time", "End Time", "Location"]],
+      body: schedules.map(schedule => [
+        schedule.module_code,
+        schedule.exam_date,
+        schedule.start_time,
+        schedule.end_time,
+        schedule.location,
+      ]),
+      startY: 20,
+    });
+
+    doc.save("Exam_Schedule_Report.pdf");
+  };
+
   return (
     <div className="container mt-4 p-4 rounded" style={{ backgroundColor: "#f4f6f9", minHeight: "100vh" }}>
       <h2 className="text-center text-primary">📅 Exam Schedule</h2>
 
-      {/* Add Exam Schedule Button */}
-      <div className="d-flex justify-content-start mb-3">
+      {/* Buttons */}
+      <div className="d-flex justify-content-between mb-3">
         <button className="btn btn-primary" onClick={() => navigate("/add-exam-schedule")}>
           ➕ Add Exam Schedule
+        </button>
+        <button className="btn btn-success" onClick={generateReport}>
+          📄 Generate Report
         </button>
       </div>
 
