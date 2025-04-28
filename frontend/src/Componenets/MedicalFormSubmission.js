@@ -51,12 +51,12 @@ const MedicalFormSubmission = () => {
           margin: auto;
           padding: 40px;
           font-family: 'Poppins', sans-serif;
-          background: linear-gradient(135deg, #6fb3f2, #4d91d4);
+          background: url('https://example.com/your-educational-image.jpg') no-repeat center center/cover;
           border-radius: 15px;
           box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
         }
         form {
-          background: #ffffff;
+          background: rgba(255, 255, 255, 0.8);
           padding: 40px;
           border-radius: 15px;
           box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
