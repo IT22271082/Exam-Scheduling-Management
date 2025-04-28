@@ -27,7 +27,7 @@ function Dashboard() {
                         </Link>
                       </li>
                                <li className="nav-item mb-2">
-                            <Link to="/exam-scheduling" className="nav-link text-white">
+                            <Link to="/exam-schedule" className="nav-link text-white">
                              📅 Exam Scheduling Management
                           </Link>
                            </li>
