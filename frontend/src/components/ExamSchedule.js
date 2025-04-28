@@ -7,6 +7,7 @@ import autoTable from "jspdf-autotable";
 
 const ExamSchedule = () => {
   const [schedules, setSchedules] = useState([]);
+  const [searchQuery, setSearchQuery] = useState(""); // State for search query
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -57,9 +58,27 @@ const ExamSchedule = () => {
     doc.save("Exam_Schedule_Report.pdf");
   };
 
+  // Filter schedules based on search query
+  const filteredSchedules = schedules.filter(schedule =>
+    schedule.module_code.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    schedule.exam_date.includes(searchQuery) ||
+    schedule.location.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <div className="container mt-4 p-4 rounded" style={{ backgroundColor: "#f4f6f9", minHeight: "100vh" }}>
       <h2 className="text-center text-primary">📅 Exam Schedule</h2>
+
+      {/* Search Bar */}
+      <div className="mb-3 d-flex">
+        <input
+          type="text"
+          className="form-control"
+          placeholder="🔍 Search by Module Code, Date, or Location..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+      </div>
 
       {/* Buttons */}
       <div className="d-flex justify-content-between mb-3">
@@ -85,8 +104,8 @@ const ExamSchedule = () => {
             </tr>
           </thead>
           <tbody>
-            {schedules.length > 0 ? (
-              schedules.map((schedule) => (
+            {filteredSchedules.length > 0 ? (
+              filteredSchedules.map((schedule) => (
                 <tr key={schedule.id}>
                   <td>{schedule.module_code}</td>
                   <td>{schedule.exam_date}</td>
@@ -94,14 +113,14 @@ const ExamSchedule = () => {
                   <td>{schedule.end_time}</td>
                   <td>{schedule.location}</td>
                   <td>
-                    <button className="btn btn-warning btn-sm me-2" onClick={() => navigate(`/edit-exam-schedule/${schedule.id}`)}>✏️ Edit</button>
-                    <button className="btn btn-danger btn-sm" onClick={() => handleDelete(schedule.id)}>🗑 Delete</button> 
+                    <button className="btn btn-warning btn-sm me-2" onClick={() => navigate(`/edit-exam-schedule/${schedule.id}`)}> ✏️ Edit</button>
+                    <button className="btn btn-danger btn-sm" onClick={() => handleDelete(schedule.id)}>🗑 Delete </button> 
                   </td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan="6" className="text-center">No exam schedules available.</td>
+                <td colSpan="6" className="text-center">No matching exam schedules found.</td>
               </tr>
             )}
           </tbody>
