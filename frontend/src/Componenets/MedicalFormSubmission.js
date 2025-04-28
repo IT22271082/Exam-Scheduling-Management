@@ -1,218 +1,226 @@
 // resources/js/components/MedicalFormSubmission.js
-import React, { useState, useEffect } from 'react';
+
 import axios from 'axios';
+import React, { useState } from 'react';
 
-// Set base URL for API requests
-axios.defaults.baseURL = 'http://127.0.0.1:8000/api';
+const MedicalFormSubmission = () => {
+  const [formData, setFormData] = useState({
+    name: '',
+    date: '',
+    icCopy: null,
+    reason: '',
+  });
+  const [submissions, setSubmissions] = useState([]);
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
 
-const MedicalFormSubmission = ({ studentId }) => {
-    const [formData, setFormData] = useState({
-        exam_name: '',
-        exam_date: '',
-        medical_reason: '',
-        medical_document: null,
+  const handleChange = (e) => {
+    const { name, value, files } = e.target;
+    if (name === 'icCopy') {
+      setFormData({ ...formData, [name]: files[0] });
+    } else {
+      setFormData({ ...formData, [name]: value });
+    }
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!formData.name || !formData.date || !formData.icCopy || !formData.reason) {
+      setError('All fields are required');
+      setMessage('');
+      return;
+    }
+    const newSubmission = { ...formData, status: 'pending' };
+    setSubmissions([...submissions, newSubmission]);
+    setFormData({
+      name: '',
+      date: '',
+      icCopy: null,
+      reason: '',
     });
-    const [submissions, setSubmissions] = useState([]);
-    const [isLoading, setIsLoading] = useState({ submissions: false, form: false });
-    const [message, setMessage] = useState({ text: '', type: '' });
+    setMessage('Submission successful');
+    setError('');
+  };
 
-    useEffect(() => {
-        if (studentId) {
-            fetchSubmissions();
-        } else {
-            setMessage({ text: 'Student ID is missing.', type: 'error' });
+  return (
+    <div className="container">
+      {/* Embedded CSS */}
+      <style>{`
+        .container {
+          max-width: 1200px;
+          margin: auto;
+          padding: 40px;
+          font-family: 'Poppins', sans-serif;
+          background: linear-gradient(135deg, #6fb3f2, #4d91d4);
+          border-radius: 15px;
+          box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
         }
-    }, [studentId]);
-
-    const fetchSubmissions = async () => {
-        setIsLoading(prev => ({ ...prev, submissions: true }));
-        try {
-            const { data } = await axios.get(`/students/${studentId}/medical-forms`);
-            setSubmissions(data);
-        } catch (error) {
-            console.error('Error fetching submissions:', error);
-            setMessage({ text: 'Failed to load submissions.', type: 'error' });
-        } finally {
-            setIsLoading(prev => ({ ...prev, submissions: false }));
+        form {
+          background: #ffffff;
+          padding: 40px;
+          border-radius: 15px;
+          box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+          margin-bottom: 30px;
         }
-    };
-
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
-    };
-
-    const handleFileChange = (e) => {
-        setFormData(prev => ({ ...prev, medical_document: e.target.files[0] }));
-    };
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setIsLoading(prev => ({ ...prev, form: true }));
-        setMessage({ text: '', type: '' });
-
-        const data = new FormData();
-        Object.entries(formData).forEach(([key, value]) => {
-            if (value) data.append(key, value);
-        });
-        data.append('student_id', studentId);
-
-        try {
-            await axios.post('/medical-forms', data, {
-                headers: { 'Content-Type': 'multipart/form-data' },
-            });
-            setMessage({ text: 'Form submitted successfully!', type: 'success' });
-            setFormData({ exam_name: '', exam_date: '', medical_reason: '', medical_document: null });
-            await fetchSubmissions();
-        } catch (error) {
-            console.error('Submission error:', error);
-            let errorMessage = 'Error submitting form.';
-            if (error.response?.status === 422) errorMessage = 'Validation error.';
-            if (error.response?.status === 413) errorMessage = 'File too large. Max 2MB.';
-            setMessage({ text: errorMessage, type: 'error' });
-        } finally {
-            setIsLoading(prev => ({ ...prev, form: false }));
+        input[type="text"],
+        input[type="date"],
+        input[type="file"],
+        textarea {
+          background: #f9f9f9;
+          border: 2px solid #d1d5db;
+          border-radius: 12px;
+          padding: 12px 16px;
+          width: 100%;
+          font-size: 16px;
+          margin-bottom: 20px;
+          transition: all 0.3s ease;
         }
-    };
+        input:focus,
+        textarea:focus {
+          border-color: #4d91d4;
+          box-shadow: 0 0 0 4px rgba(77, 145, 212, 0.2);
+        }
+        button[type="submit"] {
+          background: linear-gradient(to right, #0073e6, #004bb5);
+          color: white;
+          font-weight: bold;
+          border: none;
+          padding: 14px 0;
+          width: 100%;
+          border-radius: 50px;
+          transition: 0.4s;
+          font-size: 18px;
+          cursor: pointer;
+        }
+        button[type="submit"]:hover {
+          background: linear-gradient(to right, #004bb5, #0073e6);
+          box-shadow: 0px 8px 20px rgba(0, 115, 230, 0.4);
+        }
+        .success {
+          background: #d1fae5;
+          color: #047857;
+          padding: 15px;
+          border-radius: 12px;
+          margin-bottom: 20px;
+          font-weight: bold;
+          text-align: center;
+        }
+        .error {
+          background: #fee2e2;
+          color: #b91c1c;
+          padding: 15px;
+          border-radius: 12px;
+          margin-bottom: 20px;
+          font-weight: bold;
+          text-align: center;
+        }
+        table {
+          width: 100%;
+          border-collapse: collapse;
+          background: #ffffff;
+          border-radius: 15px;
+          overflow: hidden;
+          box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        }
+        thead {
+          background: linear-gradient(to right, #2196f3, #1976d2);
+          color: #ffffff;
+        }
+        th, td {
+          padding: 14px 18px;
+          border-bottom: 1px solid #e5e7eb;
+          text-align: center;
+          font-size: 16px;
+        }
+        tbody tr:hover {
+          background-color: #f1f5f9;
+        }
+        .status-badge {
+          display: inline-block;
+          padding: 6px 16px;
+          border-radius: 9999px;
+          font-size: 14px;
+          font-weight: bold;
+          color: #fff;
+        }
+        .status-approved {
+          background-color: #34d399;
+        }
+        .status-rejected {
+          background-color: #f87171;
+        }
+        .status-pending {
+          background-color: #fbbf24;
+        }
+      `}</style>
 
-    return (
-        <div className="container mx-auto p-6">
-            <h2 className="text-4xl font-extrabold text-center text-blue-700 mb-8">Submit Medical Absentee Form</h2>
+      {/* Success or Error Message */}
+      {message && <div className="success">{message}</div>}
+      {error && <div className="error">{error}</div>}
 
-            {/* Message Alert */}
-            {message.text && (
-                <div
-                    className={`mb-6 text-center py-3 px-6 rounded-lg ${
-                        message.type === 'success'
-                            ? 'bg-green-100 text-green-700 border border-green-300'
-                            : 'bg-red-100 text-red-700 border border-red-300'
-                    }`}
-                >
-                    {message.text}
-                </div>
-            )}
+      {/* Form */}
+      <form onSubmit={handleSubmit}>
+        <input
+          type="text"
+          name="name"
+          placeholder="Enter your name"
+          value={formData.name}
+          onChange={handleChange}
+        />
+        <input
+          type="date"
+          name="date"
+          value={formData.date}
+          onChange={handleChange}
+        />
+        <input
+          type="file"
+          name="icCopy"
+          onChange={handleChange}
+        />
+        <textarea
+          name="reason"
+          placeholder="Reason for absence"
+          value={formData.reason}
+          onChange={handleChange}
+          rows="4"
+        ></textarea>
+        <button type="submit">Submit</button>
+      </form>
 
-            {/* Form */}
-            <form onSubmit={handleSubmit} className="bg-gradient-to-br from-blue-100 to-indigo-100 p-8 rounded-3xl shadow-lg mb-12">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label className="block mb-2 text-lg font-semibold text-gray-700">Exam Name</label>
-                        <input
-                            type="text"
-                            name="exam_name"
-                            value={formData.exam_name}
-                            onChange={handleChange}
-                            className="w-full p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-400 outline-none"
-                            placeholder="Enter exam name"
-                            required
-                        />
-                    </div>
-
-                    <div>
-                        <label className="block mb-2 text-lg font-semibold text-gray-700">Exam Date</label>
-                        <input
-                            type="date"
-                            name="exam_date"
-                            value={formData.exam_date}
-                            onChange={handleChange}
-                            className="w-full p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-400 outline-none"
-                            required
-                        />
-                    </div>
-
-                    <div className="md:col-span-2">
-                        <label className="block mb-2 text-lg font-semibold text-gray-700">Medical Reason</label>
-                        <textarea
-                            name="medical_reason"
-                            value={formData.medical_reason}
-                            onChange={handleChange}
-                            className="w-full p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-400 outline-none"
-                            rows="4"
-                            placeholder="Describe the medical reason"
-                            required
-                        ></textarea>
-                    </div>
-
-                    <div className="md:col-span-2">
-                        <label className="block mb-2 text-lg font-semibold text-gray-700">Upload Medical Document</label>
-                        <input
-                            type="file"
-                            name="medical_document"
-                            onChange={handleFileChange}
-                            className="w-full p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-400 outline-none"
-                            accept=".pdf,.jpg,.jpeg,.png"
-                            required
-                        />
-                    </div>
-                </div>
-
-                <button
-                    type="submit"
-                    disabled={isLoading.form}
-                    className="w-full mt-8 bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 rounded-full transition-all duration-300 shadow-md hover:shadow-lg disabled:opacity-50"
-                >
-                    {isLoading.form ? 'Submitting...' : 'Submit Form'}
-                </button>
-            </form>
-
-            {/* Submissions */}
-            <div className="bg-white p-6 rounded-2xl shadow-lg">
-                <h3 className="text-2xl font-bold text-gray-700 mb-6 text-center">Your Submissions</h3>
-
-                {isLoading.submissions ? (
-                    <div className="flex justify-center items-center py-12">
-                        <div className="animate-spin h-10 w-10 border-4 border-blue-500 border-t-transparent rounded-full"></div>
-                    </div>
-                ) : submissions.length === 0 ? (
-                    <p className="text-center text-gray-500">No submissions found.</p>
-                ) : (
-                    <div className="overflow-x-auto">
-                        <table className="w-full table-auto border-collapse border border-gray-300">
-                            <thead className="bg-blue-200">
-                                <tr>
-                                    <th className="border border-gray-300 px-4 py-2">Exam Name</th>
-                                    <th className="border border-gray-300 px-4 py-2">Exam Date</th>
-                                    <th className="border border-gray-300 px-4 py-2">Submitted</th>
-                                    <th className="border border-gray-300 px-4 py-2">Status</th>
-                                    <th className="border border-gray-300 px-4 py-2">Document</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {submissions.map(sub => (
-                                    <tr key={sub.id} className="hover:bg-gray-100">
-                                        <td className="border border-gray-300 px-4 py-2">{sub.exam_name}</td>
-                                        <td className="border border-gray-300 px-4 py-2">{sub.exam_date}</td>
-                                        <td className="border border-gray-300 px-4 py-2">{sub.submission_date ? new Date(sub.submission_date).toLocaleDateString() : '-'}</td>
-                                        <td className="border border-gray-300 px-4 py-2 font-semibold">
-                                            <span className={`px-3 py-1 rounded-full text-white ${
-                                                sub.status === 'approved' ? 'bg-green-500' :
-                                                sub.status === 'rejected' ? 'bg-red-500' :
-                                                'bg-yellow-400'
-                                            }`}>
-                                                {sub.status?.charAt(0).toUpperCase() + sub.status?.slice(1)}
-                                            </span>
-                                        </td>
-                                        <td className="border border-gray-300 px-4 py-2">
-                                            {sub.medical_document ? (
-                                                <a
-                                                    href={`http://127.0.0.1:8000/storage/${sub.medical_document}`}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="text-blue-600 hover:underline"
-                                                >
-                                                    View
-                                                </a>
-                                            ) : 'N/A'}
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                )}
-            </div>
-        </div>
-    );
+      {/* Submissions Table */}
+      {submissions.length > 0 && (
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Date</th>
+              <th>Reason</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {submissions.map((sub, index) => (
+              <tr key={index}>
+                <td>{sub.name}</td>
+                <td>{sub.date}</td>
+                <td>{sub.reason}</td>
+                <td>
+                  <span className={`status-badge ${
+                    sub.status === 'approved' ? 'status-approved' :
+                    sub.status === 'rejected' ? 'status-rejected' :
+                    'status-pending'
+                  }`}>
+                    {sub.status?.charAt(0).toUpperCase() + sub.status?.slice(1)}
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </div>
+  );
 };
 
 export default MedicalFormSubmission;
