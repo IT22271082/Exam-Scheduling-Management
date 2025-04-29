@@ -106,9 +106,6 @@ const ExamSchedule = () => {
 
         {/* Buttons */}
         <div className="d-flex justify-content-between mb-3">
-          <button className="btn btn-primary" onClick={() => navigate("/add-exam-schedule")}>
-            ➕ Add Exam Schedule
-          </button>
           <button className="btn btn-success" onClick={generateReport}>
             📄 Generate Report
           </button>
