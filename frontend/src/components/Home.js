@@ -59,7 +59,7 @@ const Home = () => {
             boxShadow: '0 2px 5px rgba(0, 0, 0, 0.1)'
         },
         navIcon: {
-            fontSize: '1.1rem'
+            fontSize: '1.2rem'
         },
         // Container Styles
         container: {
