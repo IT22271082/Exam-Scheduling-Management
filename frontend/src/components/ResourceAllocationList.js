@@ -215,7 +215,7 @@ const ResourceAllocationList = () => {
                         style={{ 
                             padding: '10px',
                             fontSize: '1rem',
-                            borderRadius: '6px',
+                            borderRadius: '8px',
                             border: '1px solid #ccc',
                             flex: '1',
                             maxWidth: '500px'
