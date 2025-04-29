@@ -22,6 +22,7 @@ const ResourceAllocationForm = () => {
     const [success, setSuccess] = useState('');
     const [loading, setLoading] = useState(false);
     const [touched, setTouched] = useState({});
+    const [showSuccessPopup, setShowSuccessPopup] = useState(false);
 
     const API_BASE_URL = 'http://localhost:8000/api/resource-allocations';
 
@@ -44,26 +45,19 @@ const ResourceAllocationForm = () => {
         }
     }, [id]);
 
-    // Standardized time formatter that works across components
     const standardizeTimeFormat = (time) => {
         if (!time) return '';
         
-        // Remove any non-digit or colon characters
         time = time.replace(/[^\d:]/g, '');
         
-        // Handle different formats
         if (time.includes(':')) {
-            // Handle HH:MM format
             const [hours, minutes] = time.split(':');
             return `${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}`;
         } else if (time.length <= 2) {
-            // Handle single hour format (e.g. "9" becomes "09:00")
             return `${time.padStart(2, '0')}:00`;
         } else if (time.length === 3) {
-            // Handle format like 130 (1:30)
             return `0${time[0]}:${time.substring(1)}`;
         } else if (time.length === 4) {
-            // Handle HHMM format
             return `${time.substring(0, 2)}:${time.substring(2)}`;
         }
         
@@ -76,14 +70,12 @@ const ResourceAllocationForm = () => {
             const response = await axios.get(`${API_BASE_URL}/${id}`);
             const resourceData = response.data;
             
-            // Format the date for the date input (YYYY-MM-DD)
             let formattedDate = '';
             if (resourceData.allocation_date) {
                 const dateObj = new Date(resourceData.allocation_date);
                 formattedDate = dateObj.toISOString().split('T')[0];
             }
 
-            // Apply the standardized time formatter to both time fields
             const formattedStartTime = standardizeTimeFormat(resourceData.start_time);
             const formattedEndTime = standardizeTimeFormat(resourceData.end_time);
 
@@ -121,9 +113,8 @@ const ResourceAllocationForm = () => {
             
             let totalMinutes = (endHours * 60 + endMinutes) - (startHours * 60 + startMinutes);
             
-            // Handle overnight durations (end time is next day)
             if (totalMinutes < 0) {
-                totalMinutes += 24 * 60; // Add 24 hours
+                totalMinutes += 24 * 60;
             }
             
             return totalMinutes;
@@ -138,10 +129,8 @@ const ResourceAllocationForm = () => {
         setTouched({ ...touched, [name]: true });
         
         if (name === 'start_time' || name === 'end_time') {
-            // Apply standardized format before validation
             const formattedTime = standardizeTimeFormat(value);
             
-            // Update the field with standardized format
             if (formattedTime !== value) {
                 setFormData(prev => ({ ...prev, [name]: formattedTime }));
             }
@@ -223,11 +212,8 @@ const ResourceAllocationForm = () => {
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         
-        // For time inputs, standardize the format on input change
         let newValue = value;
         if (name === 'start_time' || name === 'end_time') {
-            // Don't standardize during typing as it causes cursor jumping
-            // Just store the raw value for now, we'll standardize on blur
             newValue = value;
         }
         
@@ -278,7 +264,6 @@ const ResourceAllocationForm = () => {
             isValid = false;
         }
         
-        // Standardize time formats before validation
         const standardizedStartTime = standardizeTimeFormat(formData.start_time);
         const standardizedEndTime = standardizeTimeFormat(formData.end_time);
         
@@ -337,7 +322,6 @@ const ResourceAllocationForm = () => {
         allFields.forEach(field => { newTouched[field] = true; });
         setTouched(newTouched);
         
-        // Standardize time formats before validation
         const updatedFormData = {
             ...formData,
             start_time: standardizeTimeFormat(formData.start_time),
@@ -374,7 +358,11 @@ const ResourceAllocationForm = () => {
                 setSuccess('Resource created successfully!');
             }
             
-            setTimeout(() => navigate('/resource/list'), 1500);
+            setShowSuccessPopup(true);
+            setTimeout(() => {
+                setShowSuccessPopup(false);
+                navigate('/resource/list');
+            }, 2000);
         } catch (error) {
             console.error('Error:', error);
             
@@ -415,7 +403,51 @@ const ResourceAllocationForm = () => {
 
     return (
         <div style={{ minHeight: '100vh', background: '#f0f8ff', padding: '20px' }}>
-            {/* Enhanced Navigation Bar */}
+            {/* Success Popup */}
+            {showSuccessPopup && (
+                <div style={{
+                    position: 'fixed',
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    backgroundColor: '#4BB543',
+                    color: 'white',
+                    padding: '20px 40px',
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)',
+                    zIndex: 1001,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    animation: 'fadeIn 0.3s, fadeOut 0.3s 1.7s'
+                }}>
+                    <div style={{ 
+                        fontSize: '1.2rem',
+                        fontWeight: 'bold',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px'
+                    }}>
+                        <svg 
+                            xmlns="http://www.w3.org/2000/svg" 
+                            width="24" 
+                            height="24" 
+                            viewBox="0 0 24 24" 
+                            fill="none" 
+                            stroke="currentColor" 
+                            strokeWidth="2" 
+                            strokeLinecap="round" 
+                            strokeLinejoin="round"
+                        >
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                        </svg>
+                        {id ? 'Resource updated successfully!' : 'Resource created successfully!'}
+                    </div>
+                </div>
+            )}
+
+            {/* Navigation Bar */}
             <div style={styles.navBar}>
                 <div style={styles.navLeft}>
                     <span style={styles.navTitle}>Resource Allocation System</span>
@@ -458,19 +490,6 @@ const ResourceAllocationForm = () => {
                         backgroundColor: '#f8d7da'
                     }}>
                         {error}
-                    </div>
-                )}
-                
-                {success && (
-                    <div style={{ 
-                        color: '#155724',
-                        padding: '10px',
-                        marginBottom: '20px',
-                        border: '1px solid #c3e6cb',
-                        borderRadius: '4px',
-                        backgroundColor: '#d4edda'
-                    }}>
-                        {success}
                     </div>
                 )}
                 
@@ -762,9 +781,23 @@ const ResourceAllocationForm = () => {
                     </div>
                 </form>
             </div>
+
+            <style>
+                {`
+                    @keyframes fadeIn {
+                        from { opacity: 0; transform: translate(-50%, -60%); }
+                        to { opacity: 1; transform: translate(-50%, -50%); }
+                    }
+                    @keyframes fadeOut {
+                        from { opacity: 1; transform: translate(-50%, -50%); }
+                        to { opacity: 0; transform: translate(-50%, -40%); }
+                    }
+                `}
+            </style>
         </div>
     );
 };
+
 const styles = {
     navBar: {
         background: 'linear-gradient(to right, #3498db, #2c3e50)',
