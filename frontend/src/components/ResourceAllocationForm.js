@@ -44,6 +44,32 @@ const ResourceAllocationForm = () => {
         }
     }, [id]);
 
+    // Standardized time formatter that works across components
+    const standardizeTimeFormat = (time) => {
+        if (!time) return '';
+        
+        // Remove any non-digit or colon characters
+        time = time.replace(/[^\d:]/g, '');
+        
+        // Handle different formats
+        if (time.includes(':')) {
+            // Handle HH:MM format
+            const [hours, minutes] = time.split(':');
+            return `${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}`;
+        } else if (time.length <= 2) {
+            // Handle single hour format (e.g. "9" becomes "09:00")
+            return `${time.padStart(2, '0')}:00`;
+        } else if (time.length === 3) {
+            // Handle format like 130 (1:30)
+            return `0${time[0]}:${time.substring(1)}`;
+        } else if (time.length === 4) {
+            // Handle HHMM format
+            return `${time.substring(0, 2)}:${time.substring(2)}`;
+        }
+        
+        return '';
+    };
+
     const fetchResource = async () => {
         setLoading(true);
         try {
@@ -57,25 +83,18 @@ const ResourceAllocationForm = () => {
                 formattedDate = dateObj.toISOString().split('T')[0];
             }
 
-            // Ensure time fields are properly formatted (HH:MM)
-            const formatTime = (time) => {
-                if (!time) return '';
-                if (time.includes(':')) return time;
-                // If time comes as "HHMM" format
-                if (time.length === 4) {
-                    return `${time.substring(0, 2)}:${time.substring(2)}`;
-                }
-                return time;
-            };
+            // Apply the standardized time formatter to both time fields
+            const formattedStartTime = standardizeTimeFormat(resourceData.start_time);
+            const formattedEndTime = standardizeTimeFormat(resourceData.end_time);
 
             setFormData({
                 ...resourceData,
                 allocation_date: formattedDate,
-                start_time: formatTime(resourceData.start_time) || '',
-                end_time: formatTime(resourceData.end_time) || '',
+                start_time: formattedStartTime,
+                end_time: formattedEndTime,
                 duration: resourceData.duration || calculateDuration(
-                    formatTime(resourceData.start_time),
-                    formatTime(resourceData.end_time)
+                    formattedStartTime,
+                    formattedEndTime
                 )
             });
             setError('');
@@ -119,21 +138,29 @@ const ResourceAllocationForm = () => {
         setTouched({ ...touched, [name]: true });
         
         if (name === 'start_time' || name === 'end_time') {
-            if (value && !validateTimeFormat(value)) {
+            // Apply standardized format before validation
+            const formattedTime = standardizeTimeFormat(value);
+            
+            // Update the field with standardized format
+            if (formattedTime !== value) {
+                setFormData(prev => ({ ...prev, [name]: formattedTime }));
+            }
+            
+            if (formattedTime && !validateTimeFormat(formattedTime)) {
                 setErrors(prev => ({ ...prev, [name]: 'Invalid time format (HH:MM)' }));
                 return;
             }
             
             if (name === 'start_time' && formData.end_time) {
-                const duration = calculateDuration(value, formData.end_time);
+                const duration = calculateDuration(formattedTime, formData.end_time);
                 setFormData(prev => ({ ...prev, duration }));
             } else if (name === 'end_time' && formData.start_time) {
-                const duration = calculateDuration(formData.start_time, value);
+                const duration = calculateDuration(formData.start_time, formattedTime);
                 setFormData(prev => ({ ...prev, duration }));
             }
         }
         
-        validateField(name, value);
+        validateField(name, name === 'start_time' || name === 'end_time' ? standardizeTimeFormat(value) : value);
     };
 
     const validateField = (fieldName, value) => {
@@ -195,14 +222,23 @@ const ResourceAllocationForm = () => {
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
-        const newData = { ...formData, [name]: value };
+        
+        // For time inputs, standardize the format on input change
+        let newValue = value;
+        if (name === 'start_time' || name === 'end_time') {
+            // Don't standardize during typing as it causes cursor jumping
+            // Just store the raw value for now, we'll standardize on blur
+            newValue = value;
+        }
+        
+        const newData = { ...formData, [name]: newValue };
         
         if (name === 'start_time' || name === 'end_time') {
             const otherTime = name === 'start_time' ? formData.end_time : formData.start_time;
-            if (value && otherTime) {
+            if (newValue && otherTime && validateTimeFormat(newValue) && validateTimeFormat(otherTime)) {
                 newData.duration = calculateDuration(
-                    name === 'start_time' ? value : formData.start_time,
-                    name === 'end_time' ? value : formData.end_time
+                    name === 'start_time' ? newValue : formData.start_time,
+                    name === 'end_time' ? newValue : formData.end_time
                 );
             }
         }
@@ -242,26 +278,30 @@ const ResourceAllocationForm = () => {
             isValid = false;
         }
         
-        if (!formData.start_time) {
+        // Standardize time formats before validation
+        const standardizedStartTime = standardizeTimeFormat(formData.start_time);
+        const standardizedEndTime = standardizeTimeFormat(formData.end_time);
+        
+        if (!standardizedStartTime) {
             newErrors.start_time = 'Start time is required';
             isValid = false;
-        } else if (!validateTimeFormat(formData.start_time)) {
+        } else if (!validateTimeFormat(standardizedStartTime)) {
             newErrors.start_time = 'Invalid time format (HH:MM)';
             isValid = false;
         }
         
-        if (!formData.end_time) {
+        if (!standardizedEndTime) {
             newErrors.end_time = 'End time is required';
             isValid = false;
-        } else if (!validateTimeFormat(formData.end_time)) {
+        } else if (!validateTimeFormat(standardizedEndTime)) {
             newErrors.end_time = 'Invalid time format (HH:MM)';
             isValid = false;
         }
         
-        if (formData.start_time && formData.end_time && 
-            validateTimeFormat(formData.start_time) && 
-            validateTimeFormat(formData.end_time)) {
-            const duration = calculateDuration(formData.start_time, formData.end_time);
+        if (standardizedStartTime && standardizedEndTime && 
+            validateTimeFormat(standardizedStartTime) && 
+            validateTimeFormat(standardizedEndTime)) {
+            const duration = calculateDuration(standardizedStartTime, standardizedEndTime);
             if (duration <= 0) {
                 newErrors.end_time = 'End time must be after start time';
                 isValid = false;
@@ -297,6 +337,15 @@ const ResourceAllocationForm = () => {
         allFields.forEach(field => { newTouched[field] = true; });
         setTouched(newTouched);
         
+        // Standardize time formats before validation
+        const updatedFormData = {
+            ...formData,
+            start_time: standardizeTimeFormat(formData.start_time),
+            end_time: standardizeTimeFormat(formData.end_time)
+        };
+        
+        setFormData(updatedFormData);
+        
         if (!validateForm()) {
             return;
         }
@@ -304,16 +353,16 @@ const ResourceAllocationForm = () => {
         setLoading(true);
         try {
             const payload = {
-                resource_name: formData.resource_name,
-                resource_type: formData.resource_type,
-                exam_name: formData.exam_name,
-                allocation_date: formData.allocation_date,
-                start_time: formData.start_time,
-                end_time: formData.end_time,
-                duration: calculateDuration(formData.start_time, formData.end_time),
-                status: formData.status,
-                capacity: Number(formData.capacity),
-                notes: formData.notes || null
+                resource_name: updatedFormData.resource_name,
+                resource_type: updatedFormData.resource_type,
+                exam_name: updatedFormData.exam_name,
+                allocation_date: updatedFormData.allocation_date,
+                start_time: updatedFormData.start_time,
+                end_time: updatedFormData.end_time,
+                duration: calculateDuration(updatedFormData.start_time, updatedFormData.end_time),
+                status: updatedFormData.status,
+                capacity: Number(updatedFormData.capacity),
+                notes: updatedFormData.notes || null
             };
 
             let response;
@@ -532,11 +581,12 @@ const ResourceAllocationForm = () => {
                         <div style={{ flex: 1 }}>
                             <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>Start Time*</label>
                             <input
-                                type="time"
+                                type="text"
                                 name="start_time"
                                 value={formData.start_time}
                                 onChange={handleInputChange}
                                 onBlur={handleBlur}
+                                placeholder="HH:MM"
                                 style={{ 
                                     width: '100%',
                                     padding: '10px',
@@ -555,11 +605,12 @@ const ResourceAllocationForm = () => {
                         <div style={{ flex: 1 }}>
                             <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>End Time*</label>
                             <input
-                                type="time"
+                                type="text"
                                 name="end_time"
                                 value={formData.end_time}
                                 onChange={handleInputChange}
                                 onBlur={handleBlur}
+                                placeholder="HH:MM"
                                 style={{ 
                                     width: '100%',
                                     padding: '10px',
@@ -714,7 +765,6 @@ const ResourceAllocationForm = () => {
         </div>
     );
 };
-
 const styles = {
     navBar: {
         background: 'linear-gradient(to right, #3498db, #2c3e50)',
