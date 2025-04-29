@@ -21,6 +21,7 @@ const LecturerForm = () => {
   const [loading, setLoading] = useState(isEditMode);
   const [error, setError] = useState(null);
   const [errors, setErrors] = useState({});
+  const [success, setSuccess] = useState("");
 
   useEffect(() => {
     if (isEditMode) {
@@ -117,12 +118,15 @@ const LecturerForm = () => {
     try {
       if (isEditMode) {
         await updateLecturer(id, dataToSubmit);
-        alert("Lecturer updated successfully!");
+        setSuccess("Lecturer updated successfully!");
       } else {
         await createLecturer(dataToSubmit);
-        alert("Lecturer added successfully!");
+        setSuccess("Lecturer added successfully!");
       }
-      navigate("/lecture-management");
+
+      setTimeout(() => {
+        navigate("/lecture-management");
+      }, 1500); // delay to show success message
     } catch (err) {
       if (err.response?.data?.errors) {
         setErrors(err.response.data.errors);
@@ -139,6 +143,7 @@ const LecturerForm = () => {
       <h2>{isEditMode ? "Edit Lecturer" : "Add New Lecturer"}</h2>
 
       {error && <div className="alert alert-danger">{error}</div>}
+      {success && <div className="alert alert-success">{success}</div>}
 
       <form onSubmit={handleSubmit}>
         <div className="card mb-4">
