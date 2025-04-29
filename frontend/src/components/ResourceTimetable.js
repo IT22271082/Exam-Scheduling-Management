@@ -376,7 +376,7 @@ const styles = {
         boxShadow: '0 4px 15px rgba(0, 0, 0, 0.1)'
     },
     heading: {
-        fontSize: '1.8rem',
+        fontSize: '1.7rem',
         color: '#2c3e50',
         marginBottom: '25px',
         textAlign: 'center',
