@@ -58,30 +58,31 @@ const ExamSchedule = () => {
     doc.save("Exam_Schedule_Report.pdf");
   };
 
-  const filteredSchedules = schedules.filter(schedule =>
-    schedule.module_code.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    schedule.exam_date.includes(searchQuery) ||
-    schedule.location.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredSchedules = schedules
+    .filter(schedule =>
+      schedule.module_code.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      schedule.exam_date.includes(searchQuery) ||
+      schedule.location.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+    .sort((a, b) => new Date(a.exam_date) - new Date(b.exam_date)); // Sort by date
 
   return (
     <div>
       {/* Navigation Bar */}
       <nav className="navbar navbar-expand-lg navbar-dark bg-primary">
         <div className="container">
-        <button className="navbar-brand btn btn-link text-white text-decoration-none" onClick={() => navigate("/dashboard")}>
-  🏠 Home
-</button>
-
+          <button className="navbar-brand btn btn-link text-white text-decoration-none" onClick={() => navigate("/dashboard")}>
+            🏠 Home
+          </button>
           <div className="collapse navbar-collapse" id="navbarNav">
             <ul className="navbar-nav ms-auto">
               <li className="nav-item">
                 <a className="nav-link active" href="/">Login</a>
               </li>
               <li className="nav-item">
-              <button className="btn btn-primary" onClick={() => navigate("/add-exam-schedule")}>
-            ➕ Add Exam Schedule
-          </button>
+                <button className="btn btn-primary" onClick={() => navigate("/add-exam-schedule")}>
+                  ➕ Add Exam Schedule
+                </button>
               </li>
             </ul>
           </div>
@@ -105,7 +106,9 @@ const ExamSchedule = () => {
 
         {/* Buttons */}
         <div className="d-flex justify-content-between mb-3">
-         
+          <button className="btn btn-primary" onClick={() => navigate("/add-exam-schedule")}>
+            ➕ Add Exam Schedule
+          </button>
           <button className="btn btn-success" onClick={generateReport}>
             📄 Generate Report
           </button>
