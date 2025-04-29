@@ -419,7 +419,7 @@ const styles = {
         backgroundColor: '#6c757d',
         color: 'white',
         border: 'none',
-        borderRadius: '6px',
+        borderRadius: '8px',
         cursor: 'pointer',
         fontSize: '0.9rem',
         transition: 'background-color 0.2s',
