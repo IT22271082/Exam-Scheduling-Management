@@ -1,14 +1,1 @@
-The Exam Scheduling Management System is a comprehensive solution designed to automate and optimize the process of creating exam schedules for educational institutions. This system efficiently manages lecturers, resources, and students while ensuring there are no scheduling conflicts.
-
-Key Features
-Automated Exam Scheduling: Generates conflict-free exam timetables based on various constraints
-
-Lecturer Management: Tracks faculty availability and teaching assignments
-
-Resource Allocation: Manages classrooms, labs, and other examination venues
-
-Student Management: Ensures no student has overlapping exams
-
-Constraint Configuration: Customizable rules for institution-specific requirements
-
-Reporting: Generates comprehensive schedules and examination reports
+The Exam Scheduling Management System is a comprehensive solution designed to automate and optimize the process of creating exam schedules for educational institutions. This system efficiently manages lecturers (tracking faculty availability and teaching assignments), resources (allocating classrooms, labs, and examination venues), and students (ensuring no overlapping exams) while generating conflict-free exam timetables based on customizable constraints. Additionally, it offers robust reporting capabilities to produce comprehensive schedules and examination reports, catering to institution-specific requirements.
