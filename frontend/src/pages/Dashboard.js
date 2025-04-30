@@ -17,20 +17,30 @@ function Dashboard() {
                         </Link>
                     </li>
                     <li className="nav-item mb-2">
-                        <Link to="/resource-management" className="nav-link text-white">
-                            🏫 Resource Management
+                       <Link to="/home" className="nav-link text-white">
+                             🏫 Resource Management
+                  </Link>
+                         
+                    </li>
+                    <li className="nav-item mb-2">
+                        <Link to="/student-management" className="nav-link text-white">
+                            👨‍🎓 Student Management
                         </Link>
                     </li>
                     <li className="nav-item mb-2">
-                   <Link to="/student-management" className="nav-link text-white">
-                      👨‍🎓 Student Management
+                        <Link to="/exam-scheduling" className="nav-link text-white">
+                            📅 Exam Scheduling Management
                         </Link>
+
                       </li>
                                <li className="nav-item mb-2">
                             <Link to="/exam-schedule" className="nav-link text-white">
                              📅 Exam Scheduling Management
                           </Link>
                            </li>
+
+
+                    </li>
 
                 </ul>
                 <button 
