@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaPlus, FaList } from 'react-icons/fa';
+import { FaPlus, FaList, FaTimes } from 'react-icons/fa';
 
 const StudentCreate = () => {
   const [student, setStudent] = useState({
@@ -15,6 +15,7 @@ const StudentCreate = () => {
   const [validationErrors, setValidationErrors] = useState({});
   const [existingEmails, setExistingEmails] = useState([]);
   const [existingPhones, setExistingPhones] = useState([]);
+  const [notification, setNotification] = useState(null);
 
   const navigate = useNavigate();
 
@@ -28,7 +29,6 @@ const StudentCreate = () => {
     'Information Technology'
   ];
 
-  // Fetch existing emails and phones when component mounts
   useEffect(() => {
     const fetchExistingData = async () => {
       try {
@@ -49,21 +49,18 @@ const StudentCreate = () => {
     const errors = {};
     const currentYear = new Date().getFullYear();
 
-    // Name validation
     if (!student.studentname.trim()) {
       errors.studentname = 'Name is required';
     } else if (!/^[A-Za-z\s]{2,100}$/.test(student.studentname)) {
       errors.studentname = 'Name must be 2-100 letters and spaces only';
     }
 
-    // Department validation
     if (!student.department.trim()) {
       errors.department = 'Department is required';
     } else if (!validDepartments.includes(student.department)) {
       errors.department = `Department must be one of: ${validDepartments.join(', ')}`;
     }
 
-    // Email validation
     if (!student.email.trim()) {
       errors.email = 'Email is required';
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(student.email)) {
@@ -72,7 +69,6 @@ const StudentCreate = () => {
       errors.email = 'Email already exists';
     }
 
-    // Phone validation
     if (!student.phone.trim()) {
       errors.phone = 'Phone is required';
     } else if (!/^(\+\d{1,3})?\d{10}$/.test(student.phone)) {
@@ -81,7 +77,6 @@ const StudentCreate = () => {
       errors.phone = 'Phone number already exists';
     }
 
-    // Intake year validation
     if (!student.intake_year) {
       errors.intake_year = 'Intake year is required';
     } else if (student.intake_year < 1900 || student.intake_year > currentYear) {
@@ -126,7 +121,7 @@ const StudentCreate = () => {
           throw new Error(data.message || 'Failed to add student');
         }
       } else {
-        alert('Student added successfully!');
+        setNotification('Student added successfully!');
         setStudent({
           studentname: '',
           department: '',
@@ -134,7 +129,6 @@ const StudentCreate = () => {
           phone: '',
           intake_year: '',
         });
-        // Update existing emails and phones
         setExistingEmails(prev => [...prev, data.email.toLowerCase()]);
         setExistingPhones(prev => [...prev, data.phone]);
       }
@@ -145,9 +139,32 @@ const StudentCreate = () => {
     }
   };
 
+  const closeNotification = () => {
+    setNotification(null);
+  };
+
+  useEffect(() => {
+    if (notification) {
+      const timer = setTimeout(() => {
+        setNotification(null);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [notification]);
+
   return (
     <div style={styles.container}>
       <h2 style={styles.heading}>Add Student</h2>
+      
+      {notification && (
+        <div style={styles.notification}>
+          <span>{notification}</span>
+          <button onClick={closeNotification} style={styles.notificationClose}>
+            <FaTimes />
+          </button>
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} style={styles.form}>
         <div>
           <input
@@ -218,8 +235,6 @@ const StudentCreate = () => {
           type="submit"
           style={loading ? { ...styles.button, ...styles.buttonDisabled } : styles.button}
           disabled={loading}
-          onMouseOver={(e) => !loading && (e.currentTarget.style.backgroundColor = styles.buttonHover.backgroundColor)}
-          onMouseOut={(e) => !loading && (e.currentTarget.style.backgroundColor = styles.button.backgroundColor)}
         >
           <FaPlus /> {loading ? 'Adding...' : 'Add Student'}
         </button>
@@ -228,8 +243,6 @@ const StudentCreate = () => {
       <button
         onClick={() => navigate('/student')}
         style={styles.watchButton}
-        onMouseOver={(e) => e.currentTarget.style.backgroundColor = styles.watchButtonHover.backgroundColor}
-        onMouseOut={(e) => e.currentTarget.style.backgroundColor = styles.watchButton.backgroundColor}
       >
         <FaList /> Watch Student List
       </button>
@@ -237,7 +250,6 @@ const StudentCreate = () => {
   );
 };
 
-// Your EXACT original styles object
 const styles = {
   container: {
     maxWidth: '500px',
@@ -247,6 +259,7 @@ const styles = {
     borderRadius: '15px',
     boxShadow: '0 8px 16px rgba(0, 0, 0, 0.2)',
     fontFamily: '"Poppins", sans-serif',
+    position: 'relative',
   },
   heading: {
     fontSize: '2rem',
@@ -269,9 +282,10 @@ const styles = {
     width: '100%',
     boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
     transition: 'border-color 0.3s ease',
-  },
-  inputFocus: {
-    borderColor: '#3498db',
+    '&:focus': {
+      borderColor: '#3498db',
+      outline: 'none',
+    },
   },
   button: {
     padding: '12px 20px',
@@ -285,15 +299,18 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     gap: '8px',
-    transition: 'background-color 0.3s ease, transform 0.3s ease',
-  },
-  buttonHover: {
-    backgroundColor: '#2980b9',
-    transform: 'scale(1.05)',
+    transition: 'all 0.3s ease',
+    '&:hover': {
+      backgroundColor: '#2980b9',
+      transform: 'scale(1.02)',
+    },
   },
   buttonDisabled: {
     backgroundColor: '#BDC3C7',
     cursor: 'not-allowed',
+    '&:hover': {
+      transform: 'none',
+    },
   },
   watchButton: {
     padding: '12px 20px',
@@ -308,18 +325,44 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     gap: '8px',
-    transition: 'background-color 0.3s ease, transform 0.3s ease',
+    transition: 'all 0.3s ease',
     boxShadow: '0 4px 8px rgba(26, 188, 156, 0.3)',
-  },
-  watchButtonHover: {
-    backgroundColor: '#16a085',
-    transform: 'scale(1.05)',
+    '&:hover': {
+      backgroundColor: '#16a085',
+      transform: 'scale(1.02)',
+    },
   },
   error: {
     color: '#e74c3c',
     fontSize: '0.9rem',
     textAlign: 'center',
     marginTop: '10px',
+  },
+  notification: {
+    position: 'fixed',
+    top: '20px',
+    right: '20px',
+    backgroundColor: '#2ecc71',
+    color: 'white',
+    padding: '15px 20px',
+    borderRadius: '5px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
+    zIndex: 1000,
+    animation: 'slideIn 0.3s ease-out',
+  },
+  notificationClose: {
+    background: 'none',
+    border: 'none',
+    color: 'white',
+    cursor: 'pointer',
+    fontSize: '1rem',
+  },
+  '@keyframes slideIn': {
+    from: { transform: 'translateX(100%)' },
+    to: { transform: 'translateX(0)' },
   },
 };
 
