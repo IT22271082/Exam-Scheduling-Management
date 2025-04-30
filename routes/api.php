@@ -1,7 +1,11 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+
+use App\Http\Controllers\ExamScheduleController;
+
 use App\Http\Controllers\StudentController;
+
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ResourceAllocationController; // Add this line
 use Illuminate\Http\Request;
@@ -19,6 +23,19 @@ Route::apiResource('resource-allocations', ResourceAllocationController::class);
             ->send(new \App\Mail\AbsenteeFormMail($formUrl));
     }
 
+
+// Exam Schedule Routes
+Route::get('/exam-schedules', [ExamScheduleController::class, 'index']); // Get all schedules
+Route::post('/exam-schedules', [ExamScheduleController::class, 'store']); // Add schedule
+Route::get('/exam-schedules/{id}', [ExamScheduleController::class, 'show']); // Fetch single schedule for editing
+Route::put('/exam-schedules/{id}', [ExamScheduleController::class, 'update']); // Update schedule
+Route::delete('/exam-schedules/{id}', [ExamScheduleController::class, 'destroy']); // Delete schedule
+
+// Authentication Routes
+Route::post('/login', [AuthController::class, 'login']);
+
+// Get authenticated user details
+
     return response()->json(['message' => 'Absentee form sent to all students']);
 });
 Route::apiResource('absent-students', AbsentStudentController::class);
@@ -33,6 +50,7 @@ Route::delete('/students/{id}', [StudentController::class, 'destroy']); // Delet
 Route::post('/login', [AuthController::class, 'login']);  // Login route
 
 // Example of a route that returns the authenticated user
+
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
