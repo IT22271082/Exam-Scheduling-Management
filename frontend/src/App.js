@@ -5,6 +5,11 @@ import ResourceAllocationForm from "./components/ResourceAllocationForm";
 import ResourceAllocationList from "./components/ResourceAllocationList";
 import Home from "./components/Home";
 import ResourceTimetable from "./components/ResourceTimetable"; // Import the timetable component
+import Student from "./Componenets/Student";
+import StudentCreate from "./Componenets/StudentCreate"; 
+import MedicalFormSubmission from './Componenets/MedicalFormSubmission';
+import MedicalFormsAdmin from './Componenets/MedicalFormsAdmin';
+
 
 function App() {
     return (
@@ -16,6 +21,11 @@ function App() {
                 <Route path="/resource/list" element={<ResourceAllocationList />} />
                 <Route path="/home" element={<Home />} />
                 <Route path="/timetable" element={<ResourceTimetable />} /> {/* Add the timetable route */}
+                <Route path="/student" element={<Student/>}/>
+                <Route path="/create" element={<StudentCreate />} />
+                <Route path="/medical-forms" element={<MedicalFormSubmission />} />
+                <Route path="/adminmed" element={<MedicalFormsAdmin />} />
+               
             </Routes>
         </Router>
     );
